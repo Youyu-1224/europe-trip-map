@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>2026 法国意大利行程地图</title>
+<meta name="description" content="巴黎、尼斯、佛罗伦萨、卡普里、罗马的时间轴行程地图">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ═══════════════════════════════════════════
+   Design System — edit :root to change theme
+   ═══════════════════════════════════════════ */
+:root {
+  --bg-primary:    #ffffff;
+  --bg-secondary:  #f5f5f7;
+  --bg-tertiary:   #fbfbfd;
+  --bg-grouped:    #f2f2f7;
+  --bg-elevated:   #ffffff;
+  --text-primary:   #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary:  #aeaeb2;
+  --accent:        #0071e3;
+  --accent-hover:  #0077ed;
+  --tint-red:    #ff3b30;
+  --tint-orange: #ff9500;
+  --tint-green:  #34c759;
+  --tint-blue:   #007aff;
+  --tint-purple: #af52de;
+  --tint-pink:   #ff2d55;
+  --separator:  rgba(60, 60, 67, .12);
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:  0 4px 14px rgba(0,0,0,.08);
+  --shadow-lg:  0 8px 30px rgba(0,0,0,.12);
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+               "Helvetica Neue", "Arial", sans-serif;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.47059;
+  letter-spacing: -0.022em;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Map ── */
+#map { width: 100%; height: 40vh; min-height: 280px; position: sticky; top: 0; z-index: 100; }
+.locate-btn {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: rgba(255,255,255,.92); backdrop-filter: blur(8px);
+  border: none; box-shadow: 0 1px 4px rgba(0,0,0,.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.locate-btn.active { color: #007aff; }
+@keyframes loc-pulse {
+  0%   { transform: scale(1); opacity: .55; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.loc-pulse {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: rgba(0,122,255,.25);
+  animation: loc-pulse 1.6s ease-out infinite;
+}
+
+/* ── Tabs ── */
+.tabs {
+  display: flex; gap: 6px; padding: 12px 16px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  background: rgba(255,255,255,.85); -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px); position: sticky; top: 40vh; z-index: 99;
+  border-bottom: .5px solid var(--separator); scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0; padding: 7px 16px; border-radius: 980px; border: none;
+  background: var(--bg-grouped); color: var(--text-secondary);
+  font-size: 14px; font-weight: 500; cursor: pointer; transition: all .25s ease;
+  white-space: nowrap; letter-spacing: -0.01em;
+}
+.tab:active { transform: scale(.96); }
+.tab.active { background: var(--accent); color: #fff; }
+
+/* ── Main content ── */
+.content { max-width: 680px; margin: 0 auto; padding: 16px 16px calc(24px + var(--safe-bottom)); }
+
+/* ── Overview ── */
+.hero { text-align: center; padding: 28px 20px 20px; }
+.hero h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
+.hero .subtitle { font-size: 17px; color: var(--text-secondary); margin-top: 6px; font-weight: 400; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.info-card { background: var(--bg-elevated); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm); }
+.info-card .label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .02em; margin-bottom: 6px; }
+.info-card .value { font-size: 15px; font-weight: 600; line-height: 1.4; }
+
+/* ── Section headers ── */
+.section-head { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .03em; padding: 20px 0 8px; }
+
+/* ── Day header ── */
+.day-head { padding: 20px 0 12px; }
+.day-head h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+.day-head p { font-size: 15px; color: var(--text-secondary); margin-top: 2px; }
+
+/* ── Daily weather ── */
+.weather-card { background: linear-gradient(135deg, #eef7ff, #fffdf2); border: 1px solid rgba(0,122,255,.11); border-radius: var(--radius-md); padding: 13px 14px; margin-bottom: 14px; box-shadow: var(--shadow-sm); }
+.weather-main { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.weather-main strong { font-size: 16px; }
+.weather-main span { font-size: 13px; color: var(--text-secondary); }
+.weather-note { font-size: 13px; color: var(--text-secondary); line-height: 1.55; margin-top: 5px; }
+.weather-note b { color: var(--text-primary); }
+
+/* ── Route bar ── */
+.route-bar { background: var(--bg-elevated); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 14px; box-shadow: var(--shadow-sm); font-size: 13px; color: var(--text-secondary); line-height: 1.7; white-space: pre-line; }
+.route-bar strong { color: var(--text-primary); }
+
+/* ── Timeline ── */
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before { content: ''; position: absolute; left: 7px; top: 20px; bottom: 20px; width: 1.5px; background: var(--separator); }
+.tl-item { position: relative; margin-bottom: 10px; }
+.tl-dot { position: absolute; left: -20px; top: 18px; width: 10px; height: 10px; border-radius: 50%; z-index: 1; box-shadow: 0 0 0 3px var(--bg-secondary); }
+.tl-dot.food    { background: var(--tint-red); }
+.tl-dot.spot    { background: var(--tint-blue); }
+.tl-dot.hotel   { background: var(--tint-orange); }
+.tl-dot.drink   { background: var(--tint-purple); }
+.tl-dot.transport { background: var(--text-tertiary); }
+
+/* ── Card ── */
+.card { background: var(--bg-elevated); border-radius: var(--radius-md); padding: 14px 16px; box-shadow: var(--shadow-sm); transition: box-shadow .25s ease; cursor: pointer; }
+.card:active { box-shadow: var(--shadow-md); }
+.card .time { font-size: 12px; font-weight: 600; color: var(--text-tertiary); letter-spacing: .01em; }
+.card .name { font-size: 17px; font-weight: 600; margin: 2px 0 4px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 6px; }
+.card .desc { font-size: 14px; color: var(--text-secondary); line-height: 1.45; }
+
+/* Badge */
+.badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 4px; }
+.badge.food   { background: rgba(255,59,48,.1);  color: var(--tint-red); }
+.badge.spot   { background: rgba(0,122,255,.1);  color: var(--tint-blue); }
+.badge.drink  { background: rgba(175,82,222,.1); color: var(--tint-purple); }
+
+/* Budget */
+.budget { display: inline-block; margin-top: 6px; padding: 3px 10px; background: var(--bg-grouped); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+
+/* Payment */
+.pays { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.pay { font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 600; }
+.pay.ok  { background: rgba(52,199,89,.1);  color: var(--tint-green); }
+.pay.no  { background: rgba(255,59,48,.08); color: var(--tint-red); }
+.pay.idk { background: rgba(255,149,0,.1);  color: var(--tint-orange); }
+
+/* Links row */
+.links { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; border: none; cursor: pointer;
+  text-decoration: none !important; transition: filter .2s;
+}
+.btn:active { filter: brightness(.9); }
+.btn.nav    { background: var(--accent); color: #fff; }
+.btn.xhs    { background: #ff2442; color: #fff; }
+.btn.dp     { background: #ffa700; color: #fff; }
+.btn.rsv    { background: var(--tint-green); color: #fff; }
+
+/* Action Sheet */
+.as-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.35); backdrop-filter: blur(2px);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.as-overlay.show { opacity: 1; pointer-events: auto; }
+.as-sheet {
+  width: 100%; max-width: 420px;
+  padding: 0 8px 34px;
+  transform: translateY(100%); transition: transform .3s cubic-bezier(.22,1,.36,1);
+}
+.as-overlay.show .as-sheet { transform: translateY(0); }
+.as-group {
+  background: rgba(255,255,255,.88); backdrop-filter: blur(20px);
+  border-radius: 14px; overflow: hidden; margin-bottom: 8px;
+}
+.as-group .as-item {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 16px; font-size: 18px; color: #007aff; font-weight: 500;
+  border: none; background: none; width: 100%; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.as-group .as-item + .as-item { border-top: .5px solid rgba(0,0,0,.12); }
+.as-group .as-item:active { background: rgba(0,0,0,.06); }
+.as-cancel { font-weight: 600; }
+
+/* Details — default open */
+.details {
+  margin-top: 10px; padding-top: 10px;
+  border-top: .5px solid var(--separator);
+  font-size: 13px; color: var(--text-secondary); line-height: 1.6;
+}
+.details.closed { display: none; }
+
+/* ── Overview day list ── */
+.day-list .card { margin-bottom: 8px; }
+.day-list .card .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
+/* ── Payment summary ── */
+.pay-summary { background: var(--bg-elevated); border-radius: var(--radius-md); padding: 14px 16px; box-shadow: var(--shadow-sm); font-size: 13px; line-height: 1.7; margin-bottom: 10px; }
+.pay-summary h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.pay-summary .warn { color: var(--tint-red); }
+.pay-summary .ok-text { color: var(--tint-green); }
+
+/* ── Legend ── */
+.legend { display: flex; gap: 14px; flex-wrap: wrap; padding: 8px 0; font-size: 12px; color: var(--text-secondary); }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ── Leaflet overrides ── */
+.leaflet-popup-content-wrapper { border-radius: var(--radius-md) !important; box-shadow: var(--shadow-lg) !important; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif !important; }
+.leaflet-popup-content { font-size: 14px !important; line-height: 1.5 !important; margin: 12px 14px !important; }
+.leaflet-popup-content a { color: var(--accent) !important; }
+.leaflet-popup-tip { background: #fff !important; }
+.leaflet-control-zoom a { width: 34px !important; height: 34px !important; line-height: 34px !important; font-size: 16px !important; border-radius: 10px !important; background: rgba(255,255,255,.85) !important; -webkit-backdrop-filter: blur(10px) !important; backdrop-filter: blur(10px) !important; border: .5px solid var(--separator) !important; color: var(--text-primary) !important; }
+.leaflet-control-zoom { border-radius: 12px !important; overflow: hidden; box-shadow: var(--shadow-md) !important; border: none !important; }
+.leaflet-control-attribution { font-size: 9px !important; opacity: .5; }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div class="tabs" id="tabs"></div>
+<div class="content" id="content"></div>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  Trip data                                                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+const HOTEL = { name: '巴黎里昂车站诺富特酒店', lat: 48.8450, lng: 2.3711 };
+const gm = q => encodeURIComponent(q);
+// 已逐店从官网、城市旅游局或主流本地平台复核；未公开的方式不作推定。
+const FOOD_INFO = {
+  'Le Train Bleu': { budget:'人均 €60+', pay:{card:1}, detail:'营业：每日 11:15–14:30、19:00–22:30。支付：已确认 Eurocard/Mastercard；Apple Pay/PayPal 未公开。' },
+  'Chez Janou': { budget:'午市 €18 起', pay:{card:1}, detail:'营业：每日午、晚餐（以店方当日为准）。人均：午市套餐 €18；晚餐约 €40–60。支付：已确认 Visa/银行卡；Apple Pay/PayPal 未公开。' },
+  'Granite': { budget:'午市 €68 起', detail:'营业：周一至周五午 12:00–13:30、晚 19:00–21:30；周末休息。菜单：午市 €68 / €88，晚餐 €128–188。餐厅现场支付方式未公开。' },
+  'Au Bourguignon du Marais': { budget:'人均约 €49', pay:{cash:1,card:1}, detail:'周一及周日休息；本行程周日晚餐不适用，必须换备选。支付：已确认现金、Visa、Mastercard、Amex。' },
+  'Le Petit Marché': { budget:'人均 €31–45', pay:{card:1}, detail:'营业：每日午、晚餐。支付：已确认 Visa、Mastercard、Amex；Apple Pay/PayPal 未公开。' },
+  'Le Vingt4': { pay:{card:1}, detail:'营业：周一 12:00–14:00；周二至周五 12:00–14:00、18:00–22:00；周六 18:00–22:00；周日休息。支付：已确认 Visa/Mastercard。' },
+  'Chez Pipo': { budget:'人均 €15–20', pay:{cash:1,card:1,applepay:1}, detail:'营业：周三至周日 11:30–14:30、17:30–22:00；周一、周二休。支付：已确认现金、信用卡、Amex、Apple Pay。' },
+  'Chez Acchiardo': { budget:'人均约 €30', pay:{card:1}, detail:'营业：周二至周五 12:00–14:00、19:00–22:00；周末休息。支付：已确认 Visa/信用卡；Apple Pay/PayPal 未公开。' },
+  'La Merenda': { budget:'人均 €36–50', pay:{cash:1,card:0}, detail:'营业：周二至周五 12:00–14:00、19:00–21:30；周末及周一休。支付：仅现金，不收信用卡 / Apple Pay。' },
+  'Trattoria dall’Oste': { pay:{card:1,applepay:1}, detail:'营业：每日 12:00–22:30。佛罗伦萨牛排通常按重量计价，未写虚假统一人均；支付：已确认信用卡、非接触式与 Apple Pay。' },
+  'Mercato Centrale': { detail:'营业：每日 09:00–23:00。市场内为多摊位，价格和支付方式必须按实际摊位看；因此不写一个虚假的统一人均或支付标签。' },
+  'All’Antico Vinaio': { budget:'人均 €10–20', pay:{card:1}, detail:'营业：每日 10:00–22:00。支付：已确认信用卡；Apple Pay/PayPal 未公开。热门时排队明显。' },
+  'Da Gelsomina': { pay:{card:1}, detail:'营业信息当前显示每日 09:00–23:00；餐厅通常在 10 月中旬至 3 月中旬休业。支付：已确认信用卡；价格未找到可靠人均。' },
+  'Il Solitario': { budget:'人均 €30–40', pay:{card:1}, detail:'营业：午 12:00–14:30、晚 19:00–22:30；周一休。支付：已确认信用卡；Apple Pay/PayPal 未公开。' },
+  'La Capannina': { budget:'人均 €€€', detail:'营业：每日 12:00–15:00、19:00–23:00。价格为卡普里岛高档档位；暂无可信统一人均和支付方式，现场核验。' },
+  'L’Olivo': { budget:'高档（€€€€）', detail:'营业：每日晚餐 19:30–22:30。菜单可见主菜约 €70，但完整套餐与支付方式请订位页确认，不能据此伪造人均。' },
+  'La Zanzara': { budget:'人均 €20–60', detail:'营业：每日 12:00–01:00；午餐 12:00–16:00、晚餐 19:00–23:30。支付方式未在官网公开。' },
+  'Il Sorpasso': { budget:'人均 €20–35', pay:{card:1,applepay:.5}, detail:'营业：周一至周五 09:00–01:00、周六 09:30–01:00、周日休。支付：已确认信用/借记卡及移动 NFC；Apple Pay 作为 NFC 方式标为待现场确认。' },
+  'Armando al Pantheon': { budget:'人均 €30–40', detail:'营业：午 12:30–15:00；周一至周五晚 18:00–23:00；周六晚和周日休。仅线上订位。支付方式未公开。' },
+  'Trattoria Pennestri': { budget:'人均约 €35–45', pay:{card:1}, detail:'营业：周二至周四晚 19:00–23:00；周五至周日午 12:00–15:00、晚 19:00–23:00；周一休。支付：已确认信用卡与数字支付。' }
+  ,'La Taverna dei Fori Imperiali': { budget:'人均 €20–40', pay:{card:1,applepay:1}, detail:'营业：周日、周一、周三至周六 12:30–15:00、19:30–22:30；周二休。支付：已确认信用卡、非接触式与 Apple Pay。' }
+  ,'Caffè Sant’Eustachio': { pay:{card:1,applepay:.5}, detail:'营业：周日至周四 07:30–01:00，周五至周六延长至凌晨。咖啡馆没有可靠人均；已确认信用卡，移动 NFC（含 Apple Pay）待现场确认。' }
+};
+// 景点卡的默认展开内容：把“到哪拍、怎么走、临时出状况怎么办”写在同一处。
+const SPOT_INFO = {
+  '卢浮宫':'📍入口：优先走已约时段对应入口，至少提前 25 分钟安检。\n📷拍照：玻璃金字塔建议先拍广角全景，再站在水池边以金字塔居中；入馆后不要把拍照点当成逛馆路线。\n🧭P 人路线：胜利女神 → 蒙娜丽莎 → 拿破仑三世套房，2.5–3 小时就可离场；人多或累了直接从黎塞留翼出口去杜乐丽。',
+  '埃菲尔铁塔':'📍入口：按票上电梯/楼梯入口走，背包安检后再排升降梯。\n📷拍照：上午拍塔身可去 Trocadéro 平台；若人多，退到花园侧取完整塔身。登顶以城市全景为主，风大时别用帽子/围巾做道具。\n🧭Plan B：顶层因风关闭时保留二层，别为了等顶层打乱当天蒙马特日落。',
+  '杜乐丽花园':'📷从协和广场方向回望卢浮宫的中轴线最稳定；拍人物时用树荫和椅子做前景。\n🧭这里是饭后缓冲，不要为拍照走完整个花园；16:40 左右直接地铁往蒙马特。',
+  '圣心堂与蒙马特日落':'📍到圣心堂平台后先占右侧或靠栏杆位置看城市；日落前 30–40 分钟到。\n📷拍照：用巴黎屋顶作前景拍逆光轮廓，别只对着教堂正面；下坡经过 Rue de l’Abreuvoir 再拍街景。\n⚠️人流密集时手机和包不离身；日落后直接去地铁/晚餐，不在阶梯长时间逗留。',
+  '巴黎圣母院周边':'📷河对岸 Quai de Montebello 适合把教堂和塞纳河一起拍；桥上人多就不硬等。\n🧭绕 Île de la Cité 慢走即可，不把入内排队写死；下雨时直接进附近咖啡馆再回玛黑。',
+  '马塞纳广场与让·梅德桑大道':'📍从酒店步行进入市中心，顺路买水、防晒和次日海边用品。\n📷马塞纳广场傍晚拍红色建筑和电车线条；今天只轻走，海边日落完整留给 D5。',
+  '尼斯老城':'📍从 Cours Saleya 一带进老城，巷子窄、石路滑，穿好走的鞋。\n📷黄色墙面、蓝色百叶窗和市场棚都适合人像；上午光更柔，避开正午顶光。\n🧭迷路不算失败，沿海方向走就能回到 Promenade。',
+  '城堡山':'📍上山优先走电梯/缓坡，别为了“全步行”透支体力。\n📷观景台拍天使湾弧线最完整；建议横构图，人物站画面下三分之一。\n🧭风大就拍完下山，别硬等；下坡后接海滩。',
+  'Rauba Capeu 观景台':'📷这里回望天使湾、英国人漫步道和海岸线最完整，是小红书近期尼斯攻略里反复提到但容易漏掉的机位。\n🧭不另绕远：从城堡山下到海边时顺路停 15–20 分钟即可；风大时注意帽子和裙摆。',
+  '尼斯海滩':'📷海水和鹅卵石都很上镜，坐低一点让海平线落在上三分之一；阳光强时戴墨镜更自然。\n⚠️尼斯多为鹅卵石滩，踩水带拖鞋；贵重物别离身。累了就在此停，不影响后续漫步道。',
+  '英国人漫步道':'📷从海边向西拍日落和蓝椅，人物走动抓拍比摆拍自然。\n🧭从老城一路沿海向西即可；只走到体力允许的位置，晚餐前 30 分钟回老城。',
+  '夏加尔国家博物馆':'📍行李：只带小包，离馆后再吃午餐。\n📷馆内以“看画”为主，先确认当日拍照规则；花园、彩窗和外立面是更稳妥的取景点。\n🧭若排队/房间关闭超过 20 分钟，直接留 60–75 分钟离馆，别影响下午滨海自由城。',
+  '滨海自由城 Villefranche-sur-Mer':'📍从 Nice-Ville 坐 TER 往 Monaco 方向，车程很短；下车步行下坡进老城和海湾。\n📷海湾观景点拍彩色房子、港口和弧形海岸；傍晚光更适合。\n🧭17:30 必须开始回尼斯取行李；错过海边时间也不要压缩夜车缓冲。',
+  '圣母百花大教堂':'📷广场侧拍穹顶全景；用旁边建筑的窄街做前景更容易避人。\n🧭今天只看外观和广场。想登穹顶/钟楼是另一张票和另一段体力，没预约就不临时加。',
+  '领主广场':'📷傍晚雕塑光影好，站在回廊边可同时收进人物与广场；不要堵在复制大卫像正前方。\n🧭顺着 Via dei Calzaiuoli 往老桥即可；购物和咖啡都留在这段机动时间。',
+  '乌菲兹美术馆':'📍预约时段前 20–25 分钟到；馆内动线长，先看 Botticelli 厅、达·芬奇/米开朗基罗，再按体力延伸。\n📷馆内遵守现场标识；最稳的照片是窗边阿诺河景和出口 Loggia 外立面。\n🧭90 分钟仍未看完也直接走，夜车日不要把乌菲兹变成赶路源头。',
+  '米开朗琪罗广场':'📍优先公交/出租上山，下山再走；日落时人多，提前占栏杆但别挡通道。\n📷横构图收进穹顶、老桥与阿诺河；人像放在城市天际线前。\n🧭天气差就放弃，改老城咖啡或提前去车站。',
+  '蓝洞':'📍先确认当日开放状态，再决定是否从 Marina Grande 走船；晴天不等于能进。\n📷进洞时减少频繁换镜头，手机防水绳/小包更重要；洞口必须听船夫指令躺低通过。\n⚠️小红书近期实测：船接驳约 €25、洞口票 €19，排队可能 1 小时以上、洞内约 5 分钟；易晕船可考虑陆路到洞口排队。\n🧭超过 60 分钟还没上船或海况转差，立刻执行卡普里镇/阿纳卡普里备选。',
+  '阿纳卡普里小镇':'📷白墙、柠檬树和窄巷适合慢走抓拍；从 Via Giuseppe Orlandi 向住处回走最顺。\n🧭不安排“打卡清单”，作为蓝洞关闭时的完整替代下午。',
+  '奥古斯都花园':'📍从卡普里小镇步行进入，临海步道注意风。\n📷面向 Faraglioni 海蚀柱和 Via Krupp 弯道拍全景；镜头宁可广，不要只拍花。\n🧭若蓝洞耗时过长，奥古斯都花园是当天优先保留的海景点。',
+  '梵蒂冈博物馆 + 西斯廷礼拜堂':'📍入口在 Viale Vaticano，不是圣彼得广场；按票面时段提前 20–30 分钟。\n📷西斯廷礼拜堂禁止拍照，别临场踩规则；拍照留给螺旋楼梯、馆外立面与圣彼得广场。\n🧭P 人路线：地图室 → 拉斐尔房间 → 西斯廷；超过 2.5 小时累了就直接出，不折返。',
+  '纳沃纳广场':'📷从四河喷泉侧拍广场纵深；傍晚蓝调时刻比正午更好看。\n🧭梵蒂冈出来体力不足就只走到这里，余下老城留给第二天或晚餐前。',
+  '罗马斗兽场 + 古罗马广场 + 帕拉蒂尼山':'📍必须按实名时段进斗兽场，提前 15 分钟到 Valadier Spur 一侧入口。\n📷外景优先在 Arch of Constantine 一侧拍全景；广场内逆光强，人物用侧光/树荫。\n🧭斗兽场 75 分钟后，古罗马广场与帕拉蒂尼只选一条主线；太热直接缩短，不要硬走全程。',
+  '特雷维喷泉':'📷上午或临近傍晚更好；正面人多就站侧边用喷泉局部和人物近景。\n⚠️别把“抛硬币”做成停留 30 分钟的任务，人潮过密就拍完离开。',
+};
+const food = (name, lat, lng, time, desc, city, detail='信用卡/Apple Pay/PayPal 是否可用请以现场为准。') =>
+  ({name,lat,lng,type:'food',time,desc,budget:FOOD_INFO[name]?.budget,detail:[detail, FOOD_INFO[name]?.detail].filter(Boolean).join('\n'),pay:FOOD_INFO[name]?.pay,xhsKeyword:`${city} ${name}`,dianping:false,gmap:gm(`${name}, ${city}`)});
+const ticket = (budget, detail) => ({budget, detail, ticket:true});
+const spot = (name, lat, lng, time, desc, query, reserve, ticketInfo={}) =>
+  ({name,lat,lng,type:'spot',time,desc,gmap:gm(query),reserve,xhsKeyword:`${name} 拍照攻略`,...ticketInfo,detail:[ticketInfo.detail, SPOT_INFO[name]].filter(Boolean).join('\n')});
+const hotel = (name,lat,lng,time,query) => ({name,lat,lng,type:'hotel',time,desc:'入住 / 寄存行李后再开始当日活动。',gmap:gm(query)});
+const transport = (name,lat,lng,time,desc,query,reserve,status='pending') => ({
+  name,lat,lng,type:'transport',time,desc,gmap:gm(query),reserve,
+  detail: status==='booked' ? '✅ 已订票：以航司 App / 电子客票上的实时值机、登机口和行李规定为准。' : '⚠️ 尚未购买：请打开官方链接比价、确认行李与换乘后下单。'
+});
+
+const DAYS = [
+  { id:0, label:'总览', color:'#0071e3', locations:[] },
+  { id:1,label:'D1 巴黎',date:'9月19日 周六 · 抵达',title:'巴黎抵达与酒店周边',color:'#ff9500',locations:[
+    transport('杭州萧山 T4 → 北京首都 T3',30.2295,120.4344,'09:00','CA1705，11:25 抵达北京首都 T3。','Hangzhou Xiaoshan International Airport Terminal 4',undefined,'booked'),
+    transport('北京首都 T3 → 巴黎戴高乐 T1',40.6413,116.5926,'13:30','CA933，18:15 抵达巴黎戴高乐 T1。','Beijing Capital International Airport Terminal 3',undefined,'booked'),
+    transport('巴黎戴高乐机场 T1 → 酒店',49.0097,2.5479,'18:15','入境、取行李、进城；预计晚间抵达酒店。','CDG Terminal 1','https://www.ratp.fr/en'),
+    hotel('巴黎里昂车站诺富特酒店',48.8450,2.3711,'21:00','2 Rue Hector Malot，连住 3 晚。','Novotel Paris Gare de Lyon'),
+    food('Le Train Bleu',48.8449,2.3735,'21:30','里昂车站内，首晚优先走得近、无需跨区。','Paris','首晚抵达晚，出发前请确认营业与是否需订位。'),
+    food('Café de l’Industrie',48.8545,2.3706,'—','备选：玛黑方向法式小馆；不必专程排队。','Paris'),
+    food('Brasserie Rosie',48.8572,2.3709,'—','备选：热闹小酒馆氛围，若前两家满位再去。','Paris') ] },
+  { id:2,label:'D2 巴黎',date:'9月20日 周日 · 卢浮宫与玛黑',title:'卢浮宫 → 玛黑',color:'#ff3b30',locations:[
+    spot('卢浮宫',48.8611,2.3380,'09:15','需买票 · 按预约时段入馆；上午只走重点馆藏。','Louvre Museum Paris','https://www.louvre.fr/en/visit/tickets-and-prices',ticket('非 EEA 成人 €32','开放：周一、周四、周六、周日 09:00–18:00；周二闭馆。计划预约：9/20 09:15。最后入馆为闭馆前 1 小时。中国护照/非 EEA 适用 €32。')),
+    food('Chez Janou',48.8567,2.3672,'13:15','玛黑午餐主推；小红书热度高，现场排队风险较高。','Paris','当地评价源有好评也有长等位反馈；不接受排队就直接换备选。'),
+    spot('巴黎圣母院周边',48.8530,2.3499,'15:15','塞纳河步行 → 玛黑，和第三天蒙马特分开走。','Notre-Dame de Paris'),
+    food('Le Petit Marché',48.8561,2.3646,'19:00','晚餐主推：周日晚餐正常营业，继续留在玛黑。','Paris'),
+    food('Au Bourguignon du Marais',48.8578,2.3619,'—','备选仅适用于非周日；本行程当晚不营业，不要前往。','Paris'),
+    food('L’As du Fallafel',48.8571,2.3599,'—','备选：想吃快一点时选；热门时同样会排队。','Paris') ] },
+  { id:3,label:'D3 巴黎',date:'9月21日 周一 · 铁塔与米其林',title:'埃菲尔铁塔 → 法国米其林',color:'#af52de',locations:[
+    spot('埃菲尔铁塔',48.8583,2.2945,'09:30','需买票 · 只按最终预约时段到场；安检和上塔时间需留余量。','Eiffel Tower Paris','https://ticket.toureiffel.paris/en',ticket('登顶电梯 成人 €36.70','9/21 开放 09:30–23:00。计划预约：09:30；电梯至二层 €23.50，电梯至顶层 €36.70。顶层可能因风或客流限制，请优先买官网时段票。')),
+    food('Granite',48.8610,2.3420,'12:45','法国米其林主推：巴黎一星；优先午餐，需提前订位。','Paris','米其林指南列为一星。价格、菜单和空位请以餐厅订位页为准。'),
+    spot('杜乐丽花园',48.8635,2.3278,'15:30','饭后经杜乐丽、协和广场散步；16:40 左右地铁前往蒙马特。','Tuileries Garden Paris'),
+    spot('圣心堂与蒙马特日落',48.8867,2.3431,'17:30','先到圣心堂平台等日落；9/21 日落约 19:50。看完直接下山去晚餐。','Sacré-Cœur Basilica Paris'),
+    food('Le Petit Marché',48.8561,2.3646,'21:00','日落后晚餐主推：周一营业；从蒙马特下山后地铁前往。','Paris'),
+    food('Restaurant H',48.8738,2.3147,'—','备选米其林：若 Granite 无位，再自行核验菜单与空位。','Paris'),
+    food('Le Baudelaire',48.8705,2.3289,'—','备选米其林：酒店餐厅风格，作为正式晚餐替代。','Paris') ] },
+  { id:4,label:'D4 尼斯',date:'9月22日 周二 · 巴黎 → 尼斯',title:'抵达尼斯与酒店周边',color:'#34c759',locations:[
+    transport('巴黎 → 尼斯',48.8449,2.3735,'09:30','法国境内火车 / 航班请按最终购买结果调整。','Paris Gare de Lyon','https://www.sncf-connect.com/en-en/'),
+    hotel('尼斯市中心希尔顿逸林标志酒店',43.7051,7.2634,'15:30','8 Avenue Thiers，连住 2 晚。','DoubleTree by Hilton Nice Centre Iconic'),
+    spot('马塞纳广场与让·梅德桑大道',43.6977,7.2700,'17:00','抵达日只在酒店周边轻松散步、买补给；完整海边日落留给 D5。','Place Masséna Nice'),
+    food('Le Vingt4',43.7027,7.2657,'19:00','首晚主推：酒店周边步行可达，适合抵达后快速吃。','Nice'),
+    food('La Femme du Boulanger',43.6984,7.2672,'—','备选：尼斯市中心法餐，满位就换下一家。','Nice'),
+    food('Les Sens',43.7000,7.2653,'—','备选：市中心近酒店，适合不想走远。','Nice') ] },
+  { id:5,label:'D5 尼斯',date:'9月23日 周三 · 老城与海岸',title:'老城 → 城堡山 → 英国人漫步道',color:'#00c7be',locations:[
+    spot('尼斯老城',43.6960,7.2743,'09:30','沿老城慢走；不要把景点排得太密。','Vieux Nice'),
+    food('Chez Pipo',43.6961,7.2797,'12:30','午餐主推：socca 鹰嘴豆薄饼；小红书常见推荐。','Nice','常见反馈是便宜快吃，但热门时需要等位。'),
+    spot('城堡山',43.6949,7.2806,'14:00','登高看天使湾；下坡接海边。','Castle Hill Nice'),
+    spot('Rauba Capeu 观景台',43.6953,7.2828,'14:35','城堡山下山后顺路补一个完整海湾机位。','Rauba Capeu Nice'),
+    spot('尼斯海滩',43.6930,7.2702,'15:00','下城堡山后留出约 60 分钟真正到海边坐坐、踩水或晒太阳；不是只路过拍照。','Plage des Ponchettes Nice'),
+    spot('英国人漫步道',43.6936,7.2597,'16:30','海边日落散步。','Promenade des Anglais'),
+    food('Chez Acchiardo',43.6966,7.2762,'19:30','晚餐主推：老城尼斯菜；以提前订位优先。','Nice','当地评价对传统尼斯菜较认可；避免临近饭点才到。'),
+    food('Lou Pilha Leva',43.6967,7.2752,'—','备选午餐：老城快速小吃。','Nice'),
+    food('Bistrot d’Antoine',43.6967,7.2710,'—','备选晚餐：老城小酒馆，热门时可能排队。','Nice'),
+    food('La Vague',43.6965,7.2755,'—','备选：小红书同时有推荐与避雷，点单前再看近评。','Nice') ] },
+  { id:6,label:'D6 夜车',date:'9月24日 周四 · 尼斯 → 佛罗伦萨',title:'尼斯退房与跨夜交通',color:'#5856d6',locations:[
+    spot('夏加尔国家博物馆',43.7072,7.2711,'10:00','需买票 · 上午安排；只有一个美术馆优先选它。','Musée National Marc Chagall Nice','https://musees-nationaux-alpesmaritimes.fr/chagall/en/practical-information',ticket('常设 €8；特展 €10 起','9/24 为周四，开放 10:00–18:00；13:00–14:30 闭馆，售票至闭馆前 30 分钟。计划入馆 10:00，12:45 前离馆午餐。')),
+    food('La Merenda',43.6968,7.2745,'13:00','退房日午餐主推；先查是否营业。','Nice'),
+    spot('滨海自由城 Villefranche-sur-Mer',43.7041,7.3128,'14:30','下午坐短程火车/公交去海湾、老城和沙滩；17:30 回尼斯酒店取行李。','Villefranche-sur-Mer'),
+    transport('尼斯 → 佛罗伦萨（跨夜）',43.7004,7.2684,'20:00','酒店 9/25 才入住：今晚直接夜行前往下一城。','Nice-Ville','https://www.trenitalia.com/en.html'),
+    food('Le Vingt4',43.7027,7.2657,'—','备选：若出发前需要早晚餐，回酒店附近吃最稳。','Nice') ] },
+  { id:7,label:'D7 佛罗伦萨',date:'9月25日 周五 · 抵达与老城',title:'佛罗伦萨入住 → 主教堂区',color:'#ff9500',locations:[
+    hotel('佛罗伦萨霍克斯顿酒店',43.7816,11.2582,'10:00','Via delle Mantellate 2，仅住 1 晚。','The Hoxton Florence'),
+    spot('圣母百花大教堂',43.7731,11.2560,'11:30','只走外观与广场；登顶需另留预约时间。','Florence Cathedral'),
+    food('Mercato Centrale',43.7771,11.2537,'13:00','午餐主推：第一天按体力灵活选摊，不强行订位。','Florence'),
+    spot('领主广场',43.7697,11.2558,'15:30','经老桥散步，留白给购物和咖啡。','Piazza della Signoria Florence'),
+    food('Trattoria dall’Oste',43.7757,11.2471,'19:30','晚餐主推：牛排为主，热门，建议先订位。','Florence','小红书高频候选；晚高峰与分量是重点，点餐量力而行。'),
+    food('Trattoria Zà Zà',43.7772,11.2540,'—','备选：中央市场旁，行程更顺路。','Florence'),
+    food('Osteria Pastella',43.7729,11.2470,'—','备选：松露意面热门；近期评价有排队、价格与份量分歧。','Florence') ] },
+  { id:8,label:'D8 夜车',date:'9月26日 周六 · 乌菲兹 → 那不勒斯',title:'乌菲兹与跨夜交通',color:'#5856d6',locations:[
+    spot('乌菲兹美术馆',43.7678,11.2553,'09:00','需买票 · 按最终预约时段入馆；预约未买前不要写死。','Uffizi Gallery Florence','https://www.uffizi.it/en/tickets',ticket('提前购买 €29','开放：周二至周日 08:15–18:30，周一闭馆，最后入馆 17:30。9/26 是周六，建议预约 09:00；当天购票 €25，提前购买实名票 €29。')),
+    food('All’Antico Vinaio',43.7683,11.2560,'12:30','午餐主推：佛卡夏三明治；热门，排队预期要有。','Florence'),
+    spot('米开朗琪罗广场',43.7629,11.2651,'15:30','若天气好再上去看日落；不适合赶时间。','Piazzale Michelangelo Florence'),
+    transport('佛罗伦萨 → 那不勒斯（跨夜）',43.7765,11.2476,'21:00','卡普里酒店 9/27 才入住：今晚夜行去那不勒斯。','Firenze Santa Maria Novella','https://www.trenitalia.com/en.html'),
+    food('I Fratellini',43.7709,11.2559,'—','备选：不用等正餐时快速解决。','Florence'),
+    food('Mercato Centrale',43.7771,11.2537,'—','备选：若 All’Antico 排队过长，直接回市场。','Florence') ] },
+  { id:9,label:'D9 卡普里',date:'9月27日 周日 · 那不勒斯 → 卡普里',title:'坐船上岛与阿纳卡普里',color:'#34c759',locations:[
+    transport('那不勒斯 → 卡普里船票',40.8366,14.2544,'09:00','以最终夜车抵达时间为准；船票尚未买，请提前确认班次。','Molo Beverello Naples','https://www.snav.it/en/'),
+    hotel('贝拉维斯塔酒店',40.5514,14.2194,'12:00','Via Giuseppe Orlandi 10，阿纳卡普里，连住 2 晚。','Hotel Bellavista Anacapri'),
+    food('Da Gelsomina',40.5521,14.2029,'13:30','上岛午餐主推：阿纳卡普里一侧，先安顿再去。','Anacapri'),
+    spot('阿纳卡普里小镇',40.5517,14.2169,'16:00','第一天不硬塞蓝洞，留给海况更好的明天。','Anacapri'),
+    food('Il Solitario',40.5507,14.2178,'19:30','晚餐主推：靠近住处，减少夜间交通。','Anacapri'),
+    food('La Zagara',40.5514,14.2182,'—','备选：花园氛围；小红书评价两极，菜单和服务以近评为准。','Anacapri') ] },
+  { id:10,label:'D10 卡普里',date:'9月28日 周一 · 海况备选日',title:'蓝洞（看海况）→ 卡普里镇',color:'#00c7be',locations:[
+    spot('蓝洞',40.5597,14.2029,'09:00','需买票 · 仅海况允许才去；关洞就直接执行卡普里镇备选。','Blue Grotto Capri','https://www.capri.com/en/e/museums-and-attractions-in-capri',ticket('入洞 €19；船接驳另算','9 月开放约 09:00–18:00（最后入洞约 17:30）；当日海况决定是否开放，不能提前保证。€19 为洞口入洞票，去洞口的船票另算。')),
+    spot('奥古斯都花园',40.5487,14.2403,'14:30','卡普里镇散步与海景。','Gardens of Augustus Capri'),
+    food('La Capannina',40.5504,14.2421,'13:00','卡普里镇午餐主推，按当天上岛/下岛交通弹性调整。','Capri'),
+    food('L’Olivo',40.5510,14.2191,'19:30','特别晚餐主推：卡普里岛两星；需提前订位。','Anacapri','当地报道强调景观与服务；尝试点菜比盲选长套餐更稳。'),
+    food('Da Gelsomina',40.5521,14.2029,'—','备选：不想进正式餐厅时回阿纳卡普里。','Anacapri'),
+    food('La Zagara',40.5514,14.2182,'—','备选：主推满位或天气不佳时。','Anacapri') ] },
+  { id:11,label:'D11 罗马',date:'9月29日 周二 · 卡普里 → 罗马',title:'下岛、进罗马与酒店周边',color:'#ff9500',locations:[
+    transport('卡普里 → 那不勒斯船票',40.5517,14.2169,'09:00','船票尚未购买；先锁定到那不勒斯的班次再衔接火车。','Capri Ferry Terminal','https://www.snav.it/en/'),
+    transport('那不勒斯 → 罗马',40.8366,14.2544,'12:30','按船班预留缓冲；火车票尚未购买。','Naples Centrale','https://www.trenitalia.com/en.html'),
+    hotel('卡萨古特曼酒店',41.9027,12.4863,'16:30','Via dei Serviti 26，连住 3 晚。','Via dei Serviti 26 Rome'),
+    food('La Zanzara',41.9078,12.4567,'19:30','首晚主推：梵蒂冈/Prati 一带，抵达后不跨区。','Rome'),
+    food('Il Sorpasso',41.9083,12.4575,'—','备选：Prati 区，主推满位直接换。','Rome'),
+    food('Pizzarium Bonci',41.9032,12.4542,'—','备选：想快吃时去，避开正餐排队期待。','Rome') ] },
+  { id:12,label:'D12 罗马',date:'9月30日 周三 · 梵蒂冈与老城',title:'梵蒂冈 → 纳沃纳广场',color:'#af52de',locations:[
+    spot('梵蒂冈博物馆 + 西斯廷礼拜堂',41.9065,12.4536,'08:30','需买票 · 务必通过官网选时段；只认官网票务入口。','Vatican Museums','https://tickets.museivaticani.va/home',ticket('官网时段票 €25','周一至周六 08:00–20:00，最后入场 18:00。计划预约：9/30 08:30。官网全票 €20 + 线上预约 €5；西斯廷礼拜堂包含在博物馆票内。')),
+    food('Il Sorpasso',41.9083,12.4575,'13:30','午餐主推：就在梵蒂冈附近，减少暴走。','Rome'),
+    spot('纳沃纳广场',41.8992,12.4731,'16:30','下午从河边散步到老城。','Piazza Navona Rome'),
+    food('Armando al Pantheon',41.8993,12.4768,'19:30','晚餐主推：传统罗马菜，需提前订位。','Rome'),
+    food('Pizzarium Bonci',41.9032,12.4542,'—','备选午餐：如果 Il Sorpasso 无位。','Rome'),
+    food('Roscioli',41.8941,12.4728,'—','备选晚餐：知名度高，订位困难则不强求。','Rome') ] },
+  { id:13,label:'D13 罗马',date:'10月1日 周四 · 古罗马与特雷维',title:'斗兽场 → Monti → 特雷维',color:'#ff3b30',locations:[
+    spot('罗马斗兽场 + 古罗马广场 + 帕拉蒂尼山',41.8902,12.4922,'09:00','需买票 · 票务未买：实名证件与入场时间请以官方页面为准。','Colosseum Rome','https://ticketing.colosseo.it/en/',ticket('基础联票 成人 €18','10/1 开放 08:30–18:30，最后入场 17:30。计划预约：10/1 09:00。基础票含斗兽场一、二层 + 古罗马广场/帕拉蒂尼山，斗兽场停留 75 分钟；时段票提前 30 天开售。')),
+    food('La Taverna dei Fori Imperiali',41.8948,12.4887,'13:00','午餐主推：斗兽场后步行可达，传统罗马菜。','Rome'),
+    spot('特雷维喷泉',41.9009,12.4833,'16:30','下午到傍晚散步；不必深夜特地二刷。','Trevi Fountain Rome'),
+    food('Trattoria Pennestri',41.8805,12.4988,'19:30','最后正式晚餐主推；提前订位，吃完打车/公交回酒店。','Rome'),
+    food('Ai Tre Scalini',41.8955,12.4936,'—','备选：Monti 区小酒馆，适合不想吃正餐。','Rome'),
+    food('Mimi e Coco',41.8990,12.4728,'—','备选：老城传统菜，热门时看排队再决定。','Rome') ] },
+  { id:14,label:'D14 返程',date:'10月2日 周五 · 罗马 → 杭州',title:'退房与返程',color:'#5856d6',locations:[
+    hotel('卡萨古特曼酒店',41.9027,12.4863,'09:00','退房并寄存行李；确认护照、退税资料和托运行李。','Via dei Serviti 26 Rome'),
+    food('Caffè Sant’Eustachio',41.8987,12.4754,'10:00','返程前咖啡/轻食主推，按机场出发时间可删减。','Rome'),
+    transport('罗马菲乌米奇诺 T3 → 北京首都 T3',41.8003,12.2389,'20:30','CA940 已订；10/3 12:45 抵达北京首都 T3。','Rome Fiumicino Airport Terminal 3',undefined,'booked'),
+    food('Forno Campo de’ Fiori',41.8957,12.4722,'—','备选：若还有时间，在老城简单吃再取行李出发。','Rome') ] },
+  { id:15,label:'D15 到家',date:'10月3日 周六 · 北京 → 杭州',title:'北京转机与回到杭州',color:'#5856d6',locations:[
+    transport('北京首都 T3 → 杭州萧山 T4',40.6413,116.5926,'14:30','CA1718 已订；16:45 抵达杭州萧山 T4。','Beijing Capital International Airport Terminal 3',undefined,'booked') ] }
+];
+
+// 9/18 查询的逐日预报；出发当天仍应以手机天气 App 的实时雷达为准。
+const WEATHER = {
+  1:{icon:'🌤️',temp:'25–14°C',summary:'晴间多云，抵达后降温快',note:'穿搭：短袖 + 薄外套。落地日晚餐只选酒店周边；遇航班延误直接走备选快餐。'},
+  2:{icon:'☀️',temp:'24–12°C',summary:'晴间多云，白天舒适',note:'卢浮宫室内为主，带薄外套即可；雨具不是刚需，但包里放折叠伞更稳。'},
+  3:{icon:'🌤️',temp:'24–13°C',summary:'午后转晴，日落时偏凉',note:'铁塔和蒙马特照走。日落时加一层薄外套；若云层遮挡日落，直接提早下山晚餐。'},
+  4:{icon:'☀️',temp:'29–21°C',summary:'炎热偏闷',note:'防晒、水和凉鞋放随身包。抵达日不去海边暴晒，马塞纳广场轻走即可。'},
+  5:{icon:'🌤️',temp:'28–18°C',summary:'多云间晴，适合海边',note:'海边日照仍强：防晒、墨镜、泳衣/凉鞋。若午后起雷或风大，删海滩停留，改老城咖啡。'},
+  6:{icon:'🌤️',temp:'27–18°C',summary:'局部日照，雷暴风险需复查',note:'出发前看实时雷达；若下雨或雷暴，取消滨海自由城，提前取行李并去车站附近吃饭。'},
+  7:{icon:'🌤️',temp:'25–14°C',summary:'晴间多云，早晚凉',note:'短袖 + 薄外套。老城步行多，穿舒适鞋；抵达后先寄存行李再开始。'},
+  8:{icon:'🌤️',temp:'26–14°C',summary:'晴间多云；晚间雷雨风险',note:'乌菲兹照常，米开朗琪罗广场仅晴天去；有雷雨就改老城咖啡并提前去车站。'},
+  9:{icon:'🌤️',temp:'24–20°C',summary:'多云间晴，海上交通优先',note:'船班比景点优先。带轻薄防风外套；若风浪影响船班，立刻以船公司通知为准，不强行上岛。'},
+  10:{icon:'🌦️',temp:'26–20°C',summary:'局部晨雨、多云',note:'蓝洞先看海况和风浪；关洞或下雨就直接执行卡普里镇 + 奥古斯都花园，别在码头硬等。'},
+  11:{icon:'🌦️',temp:'26–19°C',summary:'多云，午后可能有短时雨',note:'下岛与火车衔接优先，行程只保留酒店周边晚餐；雨天不额外加老城散步。'},
+  12:{icon:'🌤️',temp:'28–16°C',summary:'晴间多云，白天偏暖',note:'梵蒂冈室内 + 老城步行，带水与遮阳。若午后阵雨，纳沃纳广场改为就近咖啡馆等待。'},
+  13:{icon:'🌤️',temp:'26–14°C',summary:'晴到多云，早晚明显凉',note:'斗兽场暴晒段带水/帽子；天气转差就缩短帕拉蒂尼山，把时间留给 Monti。'},
+  14:{icon:'🌤️',temp:'26–14°C',summary:'晴间多云，适合返程',note:'上午只留轻食与最后整理；折叠伞、外套和充电宝放随身包，别压缩去机场缓冲。'}
+};
+
+const FALLBACK = {
+  1:'航班晚点 / 太累：只进酒店、在车站或酒店周边吃；不要补景点。',
+  2:'卢浮宫排队或售罄：直接走杜乐丽花园 → 塞纳河 → 玛黑；晚餐不变。',
+  3:'铁塔顶层关闭或蒙马特云太厚：保留二层 / 提早下山，别为等日落压缩晚餐。',
+  4:'抵达延误：删马塞纳广场，只留酒店周边晚餐与补给。',
+  5:'下雨 / 走不动：删城堡山和海滩，老城喝咖啡后直接去晚餐。',
+  6:'雷雨或交通不稳：删滨海自由城，15:30 后只做取行李、吃饭、到站。',
+  7:'夜车晚到：主教堂只看外观，午餐改中央市场，不追任何预约项目。',
+  8:'乌菲兹延误 / 下雨：删米开朗琪罗广场，16:30 后直接取行李去车站。',
+  9:'船停航或晚点：先联系酒店，改那不勒斯留宿；不要购买无法衔接的末班船。',
+  10:'蓝洞关闭：直接去卡普里镇 + 奥古斯都花园；不在码头等超过 30 分钟。',
+  11:'船班拖延：删罗马任何散步，只保留入住和 Prati 区晚餐。',
+  12:'梵蒂冈售罄 / 迟到：改圣彼得广场外观 + Castel Sant’Angelo 河边；下午老城照走。',
+  13:'斗兽场售罄 / 太晒：改 Monti → 特雷维；不要临时买来源不明的高价票。',
+  14:'出发前只保留咖啡、取行李、去机场；任何购物都可删。'
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  Overview content                                            ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+function overviewContent() {
+  return `
+<div class="hero"><h1>2026 法国 · 意大利</h1><p class="subtitle">9/19 杭州出发 · 10/2 罗马返程｜以主推 + 备选卡使用</p></div>
+<div class="info-grid">
+  <div class="info-card"><div class="label">酒店 · 入住安排</div><div class="value">巴黎里昂车站诺富特｜9/19–9/22，3晚｜预计到店 21:00<br><br>尼斯市中心希尔顿逸林标志｜9/22–9/24，2晚｜预计到店 15:30<br><br>佛罗伦萨霍克斯顿｜9/25–9/26，1晚｜夜车抵达后先寄存行李<br><br>贝拉维斯塔（阿纳卡普里）｜9/27–9/29，2晚｜预计到店 12:00<br><br>卡萨古特曼（罗马）｜9/29–10/2，3晚｜预计到店 16:30</div></div>
+  <div class="info-card"><div class="label">航班</div><div class="value">去程：CA1705 / CA933<br>返程：CA940 / CA1718</div></div>
+  <div class="info-card"><div class="label">待购买交通</div><div class="value">9/24 尼斯→佛罗伦萨<br>9/26 佛罗伦萨→那不勒斯<br>卡普里往返船票</div></div>
+  <div class="info-card"><div class="label">待预约</div><div class="value">卢浮宫、铁塔、乌菲兹、梵蒂冈、斗兽场、米其林</div></div>
+</div>
+<div class="section-head">先完成这些</div>
+<div class="card"><div class="name">🚆 交通购买决策</div><div class="desc"><b>9/24 尼斯 → 佛罗伦萨：</b>今日先查 Trenitalia / SNCF；只接受 ≤2 次换乘、每次至少留 35 分钟、到佛罗伦萨后能安全等到寄存行李的方案。搜索不到合适的跨夜组合时，不要硬买，改为补一晚尼斯或中转城。<br><br><b>9/26 佛罗伦萨 → 那不勒斯：</b>优先直达 Frecce；若选择晚班，必须确认抵达后有安全住宿或次日能赶上船。<br><br><b>卡普里船：</b>先锁 9/27 上岛，再买 9/29 下岛；船票以最终火车到站时间倒推，至少预留 90 分钟从 Napoli Centrale 到码头。</div><div class="links"><a class="btn rsv" target="_blank" href="https://www.trenitalia.com/en.html">打开 Trenitalia</a><a class="btn rsv" target="_blank" href="https://www.snav.it/en/">打开 SNAV 船票</a></div></div>
+<div class="card" style="margin-top:10px"><div class="name">🧳 卡普里最后一公里（带行李）</div><div class="desc">船到 Marina Grande 后：<b>带行李优先出租车直达 Hotel Bellavista（Anacapri）</b>；轻装才考虑缆车上 Capri 镇再转 Anacapri 公交。不要把大箱子塞进拥挤公交；风浪、排队或晚到时直接打车并通知酒店。上岛日不要再排蓝洞。</div></div>
+<div class="card" style="margin-top:10px"><div class="name">🎟️ 购票执行卡</div><div class="desc"><b>现在按此顺序买：</b>卢浮宫 → 铁塔 → 梵蒂冈 → 斗兽场 → 乌菲兹 → Granite。每张票：官网下单、姓名与护照一致、截图/邮件离线保存；先看改期退款规则。迟到或售罄时不买黄牛，直接按当天“失控方案”切换。</div></div>
+<div class="section-head">行程概览</div>
+<div class="day-list">${DAYS.slice(1).map(d=>`<div class="card" onclick="go(${d.id})"><div class="name"><span class="dot" style="background:${d.color}"></span>${d.label} · ${d.title}</div><div class="desc">${d.date}</div></div>`).join('')}</div>
+<div class="section-head">使用提醒</div>
+<div class="card"><div class="name">🧭 P 人使用方式</div><div class="desc">每张景点卡只要完成「到达 + 主机位 + 一条主路线」就算达标。下雨、没票、排队超过卡片提示时，直接执行 Plan B，不补课、不硬赶。</div></div>
+<div class="card"><div class="name">🗺️ 海外默认 Google Maps 导航</div><div class="desc">点「导航」后首项为 Google Maps；Apple 地图与高德为备选。</div></div>
+<div class="card"><div class="name">💳 支付</div><div class="desc">携带信用卡、Apple Pay、PayPal；各餐厅卡片仅标记已核验程度，未把商家支付方式当作已确认。</div></div>
+<div class="card"><div class="name">✅ 出发前总清单</div><div class="desc">欧盟转换插头、eSIM、主卡 + 备用信用卡、少量欧元现金、护照与酒店/机票/保险离线副本、退税文件夹、充电宝。巴黎与罗马：手机不放外侧口袋、地铁上下车捂住包。梵蒂冈：遮肩、过膝下装，避免无袖/短裤被拒入场。</div></div>
+<div class="card"><div class="name">📕 餐厅依据</div><div class="desc">每餐均有主推与备选。欧洲城市的大众点评当前不可稳定检索，因此不显示无效入口；以小红书搜索与当地评价源为准。</div></div>
+<div class="section-head">图例</div>
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--tint-red)"></div>餐厅</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--tint-blue)"></div>景点</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--tint-purple)"></div>酒吧</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--tint-orange)"></div>酒店</div>
+</div>`;
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  ENGINE — Do not modify below unless customizing behavior   ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+const map = L.map('map', { center: [HOTEL.lat || 35.69, HOTEL.lng || 139.74], zoom: 12, zoomControl: false, attributionControl: true });
+L.control.zoom({ position: 'topright' }).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+
+/* ── Geolocation ── */
+const LocateControl = L.Control.extend({
+  options: { position: 'bottomright' },
+  onAdd() {
+    const btn = L.DomUtil.create('button', 'locate-btn');
+    btn.innerHTML = '📍';
+    btn.title = '我的位置';
+    L.DomEvent.disableClickPropagation(btn);
+    btn.addEventListener('click', () => {
+      btn.classList.add('active');
+      map.locate({ setView: true, maxZoom: 15 });
+    });
+    this._btn = btn;
+    return btn;
+  }
+});
+new LocateControl().addTo(map);
+let locMarker, locCircle;
+map.on('locationfound', e => {
+  const r = e.accuracy / 2;
+  if (locMarker) { locMarker.setLatLng(e.latlng); locCircle.setLatLng(e.latlng).setRadius(r); }
+  else {
+    locMarker = L.marker(e.latlng, {
+      icon: L.divIcon({ className:'', html:'<div style="width:14px;height:14px;border-radius:50%;background:#007aff;border:2.5px solid #fff;box-shadow:0 0 6px rgba(0,122,255,.5)"></div><div class="loc-pulse" style="position:absolute;top:0;left:0"></div>', iconSize:[14,14], iconAnchor:[7,7] }),
+      zIndexOffset: 2000
+    }).addTo(map);
+    locCircle = L.circle(e.latlng, { radius: r, color: '#007aff', fillColor: '#007aff', fillOpacity: .08, weight: 1 }).addTo(map);
+  }
+});
+map.on('locationerror', () => {});
+
+function icon(color, emoji) {
+  return L.divIcon({ className: '', html: `<div style="width:28px;height:28px;border-radius:50%;background:${color};border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.18)">${emoji||''}</div>`, iconSize: [28,28], iconAnchor: [14,14], popupAnchor: [0,-16] });
+}
+
+if (HOTEL.lat) L.marker([HOTEL.lat, HOTEL.lng], { icon: icon('#ff9500','🏨'), zIndexOffset: 1000 }).addTo(map).bindPopup(`<b>${HOTEL.name}</b>`);
+
+let markers = [], polylines = [];
+const emojis = { food:'🍽️', spot:'📍', hotel:'🏨', transport:'🚃', drink:'🍺' };
+
+function clearMap() { markers.forEach(m=>map.removeLayer(m)); polylines.forEach(p=>map.removeLayer(p)); markers=[]; polylines=[]; }
+
+function showDay(idx) {
+  clearMap();
+  if (idx === 0) {
+    const pts = [];
+    DAYS.forEach(d => d.locations.forEach(l => { if(l.lat) pts.push([l.lat,l.lng]); }));
+    if(pts.length) map.fitBounds(pts, {padding:[30,30]});
+    DAYS.slice(1).forEach(d => {
+      d.locations.filter(l=>l.time!=='—').forEach(l => {
+        const m = L.circleMarker([l.lat,l.lng], { radius:4, fillColor:d.color, color:'#fff', weight:1.5, fillOpacity:.9 }).addTo(map).bindPopup(`<b>${l.name}</b><br><span style="color:#86868b">${d.label}</span>`);
+        markers.push(m);
+      });
+    });
+    return;
+  }
+  const day = DAYS.find(d=>d.id===idx);
+  if(!day) return;
+  const coords = [];
+  day.locations.forEach(l => {
+    if(!l.lat) return;
+    const m = L.marker([l.lat,l.lng], { icon: icon(day.color, emojis[l.type]||'📌') }).addTo(map);
+  const gmapQ = l.gmap||encodeURIComponent(l.name);
+    m.bindPopup(`<b>${l.name}</b>${l.time!=='—'?'<br><span style="color:#86868b">'+l.time+'</span>':''}<br>${l.desc}${l.budget?'<br><span style="color:#ff9500">'+l.budget+'</span>':''}<br><a href="#" onclick="event.preventDefault();openAS('${l.name.replace(/'/g,"\\'")}',${l.lat},${l.lng},'${gmapQ}')">📍 导航</a>${l.xhs?' · <a href="'+l.xhs+'" target="_blank">📕 小红书</a>':''}`);
+    markers.push(m);
+    if(l.time!=='—') coords.push([l.lat,l.lng]);
+  });
+  if(coords.length>1) { const pl = L.polyline(coords, { color:day.color, weight:2.5, opacity:.5, dashArray:'6,5' }).addTo(map); polylines.push(pl); }
+  if(coords.length) map.fitBounds(coords, { padding:[40,40], maxZoom:14 });
+}
+
+// ══════════ RENDER ══════════
+function payChips(pay) {
+  if(!pay) return '';
+  let h = '<div class="pays">';
+  const m = { cash:'现金', card:'💳 信用卡', applepay:'Apple Pay', paypal:'PayPal', suica:'Suica', paypay:'PayPay', alipay:'支付宝', wechat:'微信' };
+  for(const [k,label] of Object.entries(m)) {
+    if(pay[k]!==undefined) { const c = pay[k]===1?'ok':pay[k]===0.5?'idk':'no'; h += `<span class="pay ${c}">${label}</span>`; }
+  }
+  return h+'</div>';
+}
+
+// ── 运行环境检测：在第三方 App 的 WebView 里，自定义 scheme 基本会被拦截 ──
+const IN_APP_WEBVIEW = (() => {
+  const ua = (navigator.userAgent || '').toLowerCase();
+  return /micromessenger|xhs|xhsdiscover|discover\/|tiktok|aweme|weibo|qq\/|qqbrowser|alipayclient|dingtalk|lark|feishu|ucbrowser|baiduboxapp|toutiao|newsarticle/.test(ua);
+})();
+// 本地文件会在桌面内置浏览器中打开；这类浏览器通常不能处理 xhsdiscover://。
+// 对它们保留普通 HTTPS 链接，让点击始终有可用的网页搜索出口。
+const USE_WEB_XHS = IN_APP_WEBVIEW || window.location.protocol === 'file:' || /codex/i.test(navigator.userAgent || '');
+
+function xhsKeyword(loc) {
+  if(loc.xhsKeyword) return loc.xhsKeyword.trim();
+  return (loc.name||'').replace(/⭐.*$/g,'').replace(/（.*?）/g,'').replace(/\(.*?\)/g,'').replace(/\s+/g,' ').trim();
+}
+function xhsAppUrl(loc) { return `xhsdiscover://search/result?keyword=${encodeURIComponent(xhsKeyword(loc))}&target_search=notes&source=deeplink`; }
+function xhsWebUrl(loc) { return `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(xhsKeyword(loc))}&source=web_explore_feed`; }
+
+function dpKeyword(loc) {
+  if(loc.dianpingKeyword) return loc.dianpingKeyword.trim();
+  return (loc.name||'').replace(/⭐.*$/g,'').replace(/（.*?）/g,'').replace(/\(.*?\)/g,'').replace(/\s+/g,' ').trim();
+}
+function dpAppUrl(loc) { return `dianping://searchshoplist?keyword=${encodeURIComponent(dpKeyword(loc))}`; }
+function dpWebUrl(loc) { return `https://m.dianping.com/searchshop?keyword=${encodeURIComponent(dpKeyword(loc))}`; }
+
+window._extLocs = {};
+DAYS.forEach(d => d.locations.forEach(l => { window._extLocs[`${d.id}::${l.name}`] = l; }));
+window._xhsLocs = window._extLocs;
+
+function openExt(key, kind) {
+  const loc = window._extLocs[key]; if(!loc) return false;
+  if (kind === 'xhs' && USE_WEB_XHS) {
+    window.open(xhsWebUrl(loc), '_blank', 'noopener');
+  } else if (IN_APP_WEBVIEW) {
+    window.location.href = kind==='dp' ? dpWebUrl(loc) : xhsWebUrl(loc);
+  } else {
+    window.location.href = kind==='dp' ? dpAppUrl(loc) : xhsAppUrl(loc);
+  }
+  return false;
+}
+function openXhs(key) { return openExt(key, 'xhs'); }
+function openDp(key)  { return openExt(key, 'dp'); }
+
+function locCard(loc, dayIdx) {
+  const dot = loc.type==='food'?'food':loc.type==='spot'?'spot':loc.type==='drink'?'drink':loc.type==='hotel'?'hotel':'transport';
+  const bdg = loc.type==='food'?'<span class="badge food">餐</span>':loc.type==='spot'?'<span class="badge spot">景</span>':loc.type==='drink'?'<span class="badge drink">饮</span>':'';
+  const uid = `d${dayIdx}-${loc.name.replace(/\W/g,'')}`;
+  const locKey = `${dayIdx}::${loc.name}`;
+  const gmapQ = loc.gmap||encodeURIComponent(loc.name);
+  let lnk = `<button class="btn nav" onclick="openAS('${loc.name.replace(/'/g,"\\'")}',${loc.lat},${loc.lng},'${gmapQ}')">📍 导航</button>`;
+  if(loc.xhs||loc.xhsKeyword) {
+    const xhsHref = USE_WEB_XHS ? xhsWebUrl(loc) : xhsAppUrl(loc);
+    const xhsLabel = USE_WEB_XHS ? '📕 小红书搜索' : '📕 小红书 App';
+    // 网页环境不绑定 onclick：即使弹窗策略变化，浏览器仍会按 href 正常打开。
+    const xhsAttrs = USE_WEB_XHS ? 'target="_blank" rel="noopener"' : `onclick="return openXhs('${locKey.replace(/'/g,"\\'")}')"`;
+    lnk += `<a href="${xhsHref}" ${xhsAttrs} class="btn xhs">${xhsLabel}</a>`;
+  }
+  const dpEnabled = loc.dianping !== false &&
+    (loc.dianping || loc.dianpingKeyword || loc.type==='food' || loc.type==='drink');
+  if(dpEnabled) {
+    const dpHref = IN_APP_WEBVIEW ? dpWebUrl(loc) : dpAppUrl(loc);
+    const dpLabel = IN_APP_WEBVIEW ? '🍜 大众点评' : '🍜 大众点评 App';
+    lnk += `<a href="${dpHref}" onclick="return openDp('${locKey.replace(/'/g,"\\'")}')" class="btn dp">${dpLabel}</a>`;
+  }
+  if(loc.reserve) lnk += `<a href="${loc.reserve}" target="_blank" class="btn rsv">${loc.ticket ? '🎟️ 官方购票' : '📅 预约'}</a>`;
+  return `<div class="tl-item"><div class="tl-dot ${dot}"></div><div class="card" onclick="if(!event.target.closest('.btn,.links'))toggle('${uid}')"><div class="time">${loc.time!=='—'?loc.time:'备选'}</div><div class="name">${bdg} ${loc.name}</div><div class="desc">${loc.desc}</div>${loc.budget?'<div class="budget">'+loc.budget+'</div>':''}${payChips(loc.pay)}<div class="links">${lnk}</div>${loc.detail?'<div class="details" id="'+uid+'">'+loc.detail.replace(/\n/g,'<br>')+'</div>':''}</div></div>`;
+}
+
+function renderDay(idx) {
+  const d = DAYS.find(x=>x.id===idx); if(!d) return '';
+  const main = d.locations.filter(l=>l.time!=='—');
+  const alt = d.locations.filter(l=>l.time==='—');
+  let h = `<div class="day-head"><h2>${d.title}</h2><p>${d.date}</p></div>`;
+  const weather = WEATHER[idx];
+  if(weather) h += `<div class="weather-card"><div class="weather-main"><strong>${weather.icon} ${weather.temp}</strong><span>${weather.summary}</span></div><div class="weather-note"><b>今日怎么用：</b>${weather.note}</div></div>`;
+  if(FALLBACK[idx]) h += `<div class="route-bar"><strong>🧯 失控也能照做</strong><br>${FALLBACK[idx]}</div>`;
+  if(main.length) { h += '<div class="section-head">行程</div><div class="timeline">'; main.forEach(l => h += locCard(l, idx)); h += '</div>'; }
+  if(alt.length) { h += '<div class="section-head">备选</div><div class="timeline">'; alt.forEach(l => h += locCard(l, idx)); h += '</div>'; }
+  return h;
+}
+
+// ══════════ NAV ══════════
+let cur = 0;
+const tabsEl = document.getElementById('tabs');
+const contentEl = document.getElementById('content');
+
+DAYS.forEach(d => {
+  const btn = document.createElement('button');
+  btn.className = 'tab' + (d.id===0?' active':'');
+  btn.dataset.day = d.id;
+  btn.textContent = d.label;
+  tabsEl.appendChild(btn);
+});
+
+function go(idx) {
+  cur = idx;
+  tabsEl.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', +t.dataset.day===idx));
+  contentEl.innerHTML = idx===0 ? overviewContent() : renderDay(idx);
+  showDay(idx);
+  contentEl.scrollTo({top:0});
+  const tab = tabsEl.querySelector(`[data-day="${idx}"]`);
+  if(tab) tab.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+}
+
+function toggle(id) { const el=document.getElementById(id); if(el) el.classList.toggle('closed'); }
+
+tabsEl.addEventListener('click', e => { const t=e.target.closest('.tab'); if(t) go(+t.dataset.day); });
+
+go(0);
+
+/* ── Action Sheet for Navigation ── */
+const asOverlay = document.createElement('div');
+asOverlay.className = 'as-overlay';
+asOverlay.innerHTML = `<div class="as-sheet">
+  <div class="as-group" id="as-opts"></div>
+  <div class="as-group"><button class="as-item as-cancel" onclick="closeAS()">取消</button></div>
+</div>`;
+document.body.appendChild(asOverlay);
+asOverlay.addEventListener('click', e => { if (e.target === asOverlay) closeAS(); });
+
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+function amapAppUrl(name, lat, lng) {
+  const scheme = IS_IOS ? 'iosamap' : 'androidamap';
+  return `${scheme}://viewMap?sourceApplication=trip&poiname=${encodeURIComponent(name)}&lat=${lat}&lon=${lng}&dev=0`;
+}
+function amapWebUrl(name, lat, lng) {
+  return `https://uri.amap.com/marker?position=${lng},${lat}&name=${encodeURIComponent(name)}&src=trip&coordinate=wgs84&callnative=1`;
+}
+function openAmap(name, lat, lng) {
+  if (IN_APP_WEBVIEW) { window.open(amapWebUrl(name, lat, lng)); return; }
+  window.location.href = amapAppUrl(name, lat, lng);
+}
+
+function openAS(name, lat, lng, gmap) {
+  const q = gmap || encodeURIComponent(name);
+  const encName = encodeURIComponent(name);
+  const safeName = name.replace(/'/g,"\\'");
+  // WebView 内 maps:// 通常被拦截，改用 https Apple Maps URL —— iOS 系统会自动拉起 Apple Maps
+  const appleUrl = IN_APP_WEBVIEW
+    ? `https://maps.apple.com/?q=${lat},${lng}&ll=${lat},${lng}&name=${encName}`
+    : `maps://maps.apple.com/?q=${lat},${lng}&name=${encName}`;
+  const googleUrl = `https://www.google.com/maps/search/?api=1&query=${q}`;
+  document.getElementById('as-opts').innerHTML =
+    `<button class="as-item" onclick="window.open('${googleUrl}');closeAS()">🗺️ Google Maps</button>` +
+    `<button class="as-item" onclick="window.open('${appleUrl}');closeAS()">🍎 Apple Maps</button>` +
+    `<button class="as-item" onclick="openAmap('${safeName}',${lat},${lng});closeAS()">🧭 高德地图 App</button>`;
+  asOverlay.classList.add('show');
+}
+function closeAS() { asOverlay.classList.remove('show'); }
+</script>
+</body>
+</html>
