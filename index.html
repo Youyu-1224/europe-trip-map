@@ -100,10 +100,26 @@ a:hover { text-decoration: underline; }
 .hero h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
 .hero .subtitle { font-size: 17px; color: var(--text-secondary); margin-top: 6px; font-weight: 400; }
 
-.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-.info-card { background: var(--bg-elevated); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm); }
-.info-card .label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .02em; margin-bottom: 6px; }
-.info-card .value { font-size: 15px; font-weight: 600; line-height: 1.4; }
+.trip-summary { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(240px,.65fr); gap:12px; margin-bottom:20px; }
+.overview-panel { background:var(--bg-elevated); border-radius:var(--radius-lg); padding:17px 18px; box-shadow:var(--shadow-sm); }
+.overview-kicker { font-size:12px; font-weight:650; color:var(--text-secondary); letter-spacing:.02em; margin-bottom:10px; }
+.stay-row { display:grid; grid-template-columns:44px minmax(0,1fr) auto; gap:9px; align-items:start; padding:11px 0; border-top:.5px solid var(--separator); }
+.stay-row:first-of-type { border-top:0; padding-top:0; }
+.stay-city { font-size:12px; font-weight:700; color:var(--accent); padding-top:2px; }
+.stay-name { display:block; font-size:15px; font-weight:650; line-height:1.35; }
+.stay-meta { display:block; margin-top:2px; font-size:12px; color:var(--text-secondary); line-height:1.4; font-variant-numeric:tabular-nums; }
+.stay-state { font-size:11px; color:var(--tint-green); font-weight:700; white-space:nowrap; padding-top:3px; }
+.flight-panel { display:flex; flex-direction:column; justify-content:space-between; }
+.flight-leg { padding:10px 0; border-top:.5px solid var(--separator); }
+.flight-leg:first-of-type { border-top:0; padding-top:0; }
+.flight-route { font-size:14px; font-weight:650; }
+.flight-meta { margin-top:3px; font-size:12px; color:var(--text-secondary); line-height:1.45; font-variant-numeric:tabular-nums; }
+.flight-ok { display:inline-block; margin-top:7px; font-size:11px; font-weight:700; color:var(--tint-green); background:rgba(52,199,89,.1); padding:3px 7px; border-radius:5px; }
+.action-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-bottom:4px; }
+.action-card { background:var(--bg-elevated); border-radius:var(--radius-md); padding:14px 15px; box-shadow:var(--shadow-sm); }
+.action-card .action-title { font-size:12px; font-weight:650; color:var(--text-secondary); margin-bottom:5px; }
+.action-card .action-value { font-size:14px; font-weight:650; line-height:1.45; }
+@media (max-width:600px) { .trip-summary,.action-grid { grid-template-columns:1fr; } .overview-panel { padding:16px; } }
 
 /* ── Section headers ── */
 .section-head { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .03em; padding: 20px 0 8px; }
@@ -460,11 +476,22 @@ const FALLBACK = {
 function overviewContent() {
   return `
 <div class="hero"><h1>2026 法国 · 意大利</h1><p class="subtitle">9/19 杭州出发 · 10/2 罗马返程｜以主推 + 备选卡使用</p></div>
-<div class="info-grid">
-  <div class="info-card"><div class="label">酒店 · 入住安排</div><div class="value">巴黎里昂车站诺富特｜9/19–9/22，3晚｜预计到店 21:00<br><br>尼斯市中心希尔顿逸林标志｜9/22–9/24，2晚｜预计到店 15:30<br><br>佛罗伦萨霍克斯顿｜9/25–9/26，1晚｜夜车抵达后先寄存行李<br><br>贝拉维斯塔（阿纳卡普里）｜9/27–9/29，2晚｜预计到店 12:00<br><br>卡萨古特曼（罗马）｜9/29–10/2，3晚｜预计到店 16:30</div></div>
-  <div class="info-card"><div class="label">航班</div><div class="value">去程：CA1705 / CA933<br>返程：CA940 / CA1718</div></div>
-  <div class="info-card"><div class="label">待购买交通</div><div class="value">9/24 尼斯→佛罗伦萨<br>9/26 佛罗伦萨→那不勒斯<br>卡普里往返船票</div></div>
-  <div class="info-card"><div class="label">待预约</div><div class="value">卢浮宫、铁塔、乌菲兹、梵蒂冈、斗兽场、米其林</div></div>
+<div class="trip-summary">
+  <section class="overview-panel"><div class="overview-kicker">酒店 · 已订</div>
+    <div class="stay-row"><span class="stay-city">巴黎</span><div><span class="stay-name">巴黎里昂车站诺富特</span><span class="stay-meta">9/19–9/22 · 3 晚 · 预计 21:00 到店</span></div><span class="stay-state">已订</span></div>
+    <div class="stay-row"><span class="stay-city">尼斯</span><div><span class="stay-name">尼斯市中心希尔顿逸林标志</span><span class="stay-meta">9/22–9/24 · 2 晚 · 预计 15:30 到店</span></div><span class="stay-state">已订</span></div>
+    <div class="stay-row"><span class="stay-city">佛罗伦萨</span><div><span class="stay-name">佛罗伦萨霍克斯顿</span><span class="stay-meta">9/25–9/26 · 1 晚 · 夜间抵达后先寄存行李</span></div><span class="stay-state">已订</span></div>
+    <div class="stay-row"><span class="stay-city">卡普里</span><div><span class="stay-name">贝拉维斯塔 · 阿纳卡普里</span><span class="stay-meta">9/27–9/29 · 2 晚 · 预计 12:00 到店</span></div><span class="stay-state">已订</span></div>
+    <div class="stay-row"><span class="stay-city">罗马</span><div><span class="stay-name">卡萨古特曼</span><span class="stay-meta">9/29–10/2 · 3 晚 · 预计 16:30 到店</span></div><span class="stay-state">已订</span></div>
+  </section>
+  <aside class="overview-panel flight-panel"><div class="overview-kicker">航班 · 已订</div>
+    <div class="flight-leg"><div class="flight-route">杭州 → 巴黎</div><div class="flight-meta">CA1705 · 杭州 T4 → 北京 T3<br>CA933 · 北京 T3 → 巴黎 CDG T1</div><span class="flight-ok">✓ 已订</span></div>
+    <div class="flight-leg"><div class="flight-route">罗马 → 杭州</div><div class="flight-meta">CA940 · 罗马 FCO T3 → 北京 T3<br>CA1718 · 北京 T3 → 杭州 T4</div><span class="flight-ok">✓ 已订</span></div>
+  </aside>
+</div>
+<div class="action-grid">
+  <div class="action-card"><div class="action-title">待购买交通</div><div class="action-value">9/24 尼斯→佛罗伦萨<br>9/26 佛罗伦萨→那不勒斯<br>卡普里往返船票</div></div>
+  <div class="action-card"><div class="action-title">待预约</div><div class="action-value">卢浮宫、铁塔、乌菲兹<br>梵蒂冈、斗兽场、米其林</div></div>
 </div>
 <div class="section-head">先完成这些</div>
 <div class="card"><div class="name">🚆 交通购买决策</div><div class="desc"><b>9/24 尼斯 → 佛罗伦萨：</b>今日先查 Trenitalia / SNCF；只接受 ≤2 次换乘、每次至少留 35 分钟、到佛罗伦萨后能安全等到寄存行李的方案。搜索不到合适的跨夜组合时，不要硬买，改为补一晚尼斯或中转城。<br><br><b>9/26 佛罗伦萨 → 那不勒斯：</b>优先直达 Frecce；若选择晚班，必须确认抵达后有安全住宿或次日能赶上船。<br><br><b>卡普里船：</b>先锁 9/27 上岛，再买 9/29 下岛；船票以最终火车到站时间倒推，至少预留 90 分钟从 Napoli Centrale 到码头。</div><div class="links"><a class="btn rsv" target="_blank" href="https://www.trenitalia.com/en.html">打开 Trenitalia</a><a class="btn rsv" target="_blank" href="https://www.snav.it/en/">打开 SNAV 船票</a></div></div>
