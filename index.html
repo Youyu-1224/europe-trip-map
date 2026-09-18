@@ -497,7 +497,7 @@ function overviewContent() {
 <div class="section-head">先完成这些</div>
 <div class="card"><div class="name">🚆 交通购买决策</div><div class="desc"><b>9/24 尼斯 → 佛罗伦萨：</b>今日先查 Trenitalia / SNCF；只接受 ≤2 次换乘、每次至少留 35 分钟、到佛罗伦萨后能安全等到寄存行李的方案。搜索不到合适的跨夜组合时，不要硬买，改为补一晚尼斯或中转城。<br><br><b>9/26 佛罗伦萨 → 那不勒斯：</b>优先直达 Frecce；若选择晚班，必须确认抵达后有安全住宿或次日能赶上船。<br><br><b>卡普里船：</b>先锁 9/27 上岛，再买 9/29 下岛；船票以最终火车到站时间倒推，至少预留 90 分钟从 Napoli Centrale 到码头。</div><div class="links"><a class="btn rsv" target="_blank" href="https://www.trenitalia.com/en.html">打开 Trenitalia</a><a class="btn rsv" target="_blank" href="https://www.snav.it/en/">打开 SNAV 船票</a></div></div>
 <div class="card" style="margin-top:10px"><div class="name">🧳 卡普里最后一公里（带行李）</div><div class="desc">船到 Marina Grande 后：<b>带行李优先出租车直达 Hotel Bellavista（Anacapri）</b>；轻装才考虑缆车上 Capri 镇再转 Anacapri 公交。不要把大箱子塞进拥挤公交；风浪、排队或晚到时直接打车并通知酒店。上岛日不要再排蓝洞。</div></div>
-<div class="card" style="margin-top:10px"><div class="name">🎟️ 购票执行卡</div><div class="desc"><b>现在按此顺序买：</b>卢浮宫 → 铁塔 → 梵蒂冈 → 斗兽场 → 乌菲兹 → Granite。每张门票卡均有“官方购票 + 携程搜票”：官方用于核验规则与时段，携程用于中文套餐和库存对比。每张票：姓名与护照一致、截图/邮件离线保存；先看改期退款规则。迟到或售罄时不买黄牛，直接按当天“失控方案”切换。</div></div>
+<div class="card" style="margin-top:10px"><div class="name">🎟️ 购票执行卡</div><div class="desc"><b>现在按此顺序买：</b>卢浮宫 → 铁塔 → 梵蒂冈 → 斗兽场 → 乌菲兹 → Granite。每张门票卡均有“官方购票 + 携程打开后搜票”：官方用于核验规则与时段；携程打开后搜索“景点名 + 门票”，用于中文套餐和库存对比。每张票：姓名与护照一致、截图/邮件离线保存；先看改期退款规则。迟到或售罄时不买黄牛，直接按当天“失控方案”切换。</div></div>
 <div class="section-head">行程概览</div>
 <div class="day-list">${DAYS.slice(1).map(d=>`<div class="card" onclick="go(${d.id})"><div class="name"><span class="dot" style="background:${d.color}"></span>${d.label} · ${d.title}</div><div class="desc">${d.date}</div></div>`).join('')}</div>
 <div class="section-head">使用提醒</div>
@@ -620,7 +620,8 @@ function xhsKeyword(loc) {
 }
 function xhsAppUrl(loc) { return `xhsdiscover://search/result?keyword=${encodeURIComponent(xhsKeyword(loc))}&target_search=notes&source=deeplink`; }
 function xhsWebUrl(loc) { return `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(xhsKeyword(loc))}&source=web_explore_feed`; }
-function ctripTicketUrl(loc) { return `https://s.ctrip.com/?keyword=${encodeURIComponent(`${loc.name} 门票`)}`; }
+// 携程旧版 s.ctrip.com 搜索地址已失效；使用稳定首页，打开后手动搜景点名 + 门票。
+function ctripTicketUrl() { return 'https://www.ctrip.com/'; }
 
 function dpKeyword(loc) {
   if(loc.dianpingKeyword) return loc.dianpingKeyword.trim();
@@ -669,7 +670,7 @@ function locCard(loc, dayIdx) {
     lnk += `<a href="${dpHref}" onclick="return openDp('${locKey.replace(/'/g,"\\'")}')" class="btn dp">${dpLabel}</a>`;
   }
   if(loc.reserve) lnk += `<a href="${loc.reserve}" target="_blank" rel="noopener" class="btn rsv">${loc.ticket ? '🎟️ 官方购票' : '📅 预约'}</a>`;
-  if(loc.ticket) lnk += `<a href="${ctripTicketUrl(loc)}" target="_blank" rel="noopener" class="btn ctrip">携程搜票</a>`;
+  if(loc.ticket) lnk += `<a href="${ctripTicketUrl()}" target="_blank" rel="noopener" class="btn ctrip">携程打开后搜票</a>`;
   return `<div class="tl-item"><div class="tl-dot ${dot}"></div><div class="card" onclick="if(!event.target.closest('.btn,.links'))toggle('${uid}')"><div class="time">${loc.time!=='—'?loc.time:'备选'}</div><div class="name">${bdg} ${loc.name}</div><div class="desc">${loc.desc}</div>${loc.budget?'<div class="budget">'+loc.budget+'</div>':''}${payChips(loc.pay)}<div class="links">${lnk}</div>${loc.detail?'<div class="details" id="'+uid+'">'+loc.detail.replace(/\n/g,'<br>')+'</div>':''}</div></div>`;
 }
 
