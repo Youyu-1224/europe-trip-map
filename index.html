@@ -386,15 +386,15 @@ const DAYS = [
     food('Trattoria dall’Oste',43.7757,11.2471,'19:30','晚餐主推：牛排为主，热门，建议先订位。','Florence','小红书高频候选；晚高峰与分量是重点，点餐量力而行。'),
     food('Trattoria Zà Zà',43.7772,11.2540,'—','备选：中央市场旁，行程更顺路。','Florence'),
     food('Osteria Pastella',43.7729,11.2470,'—','备选：松露意面热门；近期评价有排队、价格与份量分歧。','Florence') ] },
-  { id:8,label:'D8 夜车',date:'9月26日 周六 · 比萨 → 那不勒斯',title:'比萨半日与跨夜交通',color:'#5856d6',locations:[
-    spot('比萨斜塔与奇迹广场',43.7230,10.3966,'09:30','从佛罗伦萨往返比萨只做奇迹广场；15:00–17:00 光线更好，但本日要赶夜车，不强留日落。','Leaning Tower of Pisa'),
-    food('All’Antico Vinaio',43.7683,11.2560,'12:30','午餐主推：佛卡夏三明治；热门，排队预期要有。','Florence'),
-    spot('米开朗琪罗广场',43.7629,11.2651,'15:30','若天气好再上去看日落；不适合赶时间。','Piazzale Michelangelo Florence'),
-    transport('佛罗伦萨 → 那不勒斯（跨夜）',43.7765,11.2476,'21:00','卡普里酒店 9/27 才入住：今晚夜行去那不勒斯。','Firenze Santa Maria Novella','https://www.trenitalia.com/en.html'),
+  { id:8,label:'D8 索伦托',date:'9月26日 周六 · 佛罗伦萨 → 索伦托',title:'佛罗伦萨半日 → 索伦托入住',color:'#5856d6',locations:[
+    spot('佛罗伦萨老城晨间 citywalk',43.7714,11.2558,'09:30','只在主教堂区、旧桥附近轻走；今天不去比萨，避免错过 14:00 左右南下交通。','Florence Historic Centre'),
+    food('All’Antico Vinaio',43.7683,11.2560,'11:30','午餐主推：佛卡夏三明治；热门，排队超过 20 分钟就换备选。','Florence'),
+    transport('佛罗伦萨 → 那不勒斯 → 索伦托',43.7765,11.2476,'14:00','高铁到那不勒斯后转 Circumvesuviana / 机场巴士或轮渡到索伦托；以最终车票衔接为准。','Firenze Santa Maria Novella','https://www.trenitalia.com/en.html'),
+    hotel('索伦托希尔顿酒店',40.6263,14.3750,'19:30','9/26–9/27，1 晚；到店后只在酒店/索伦托中心附近晚餐。','Hilton Sorrento Palace'),
     food('I Fratellini',43.7709,11.2559,'—','备选：不用等正餐时快速解决。','Florence'),
     food('Mercato Centrale',43.7771,11.2537,'—','备选：若 All’Antico 排队过长，直接回市场。','Florence') ] },
-  { id:9,label:'D9 卡普里',date:'9月27日 周日 · 那不勒斯 → 卡普里',title:'坐船上岛与阿纳卡普里',color:'#34c759',locations:[
-    transport('那不勒斯 → 卡普里船票',40.8366,14.2544,'09:00','以最终夜车抵达时间为准；船票尚未买，请提前确认班次。','Molo Beverello Naples','https://www.snav.it/en/'),
+  { id:9,label:'D9 卡普里',date:'9月27日 周日 · 索伦托 → 卡普里',title:'索伦托上岛与阿纳卡普里',color:'#34c759',locations:[
+    transport('索伦托 → 卡普里船票',40.6256,14.3754,'11:00','退房后从 Sorrento Marina Piccola 坐船上卡普里；船票尚未买，先确认班次和行李规则。','Sorrento Marina Piccola','https://www.snav.it/en/'),
     hotel('贝拉维斯塔酒店',40.5514,14.2194,'12:00','Via Giuseppe Orlandi 10，阿纳卡普里，连住 2 晚。','Hotel Bellavista Anacapri'),
     food('Da Gelsomina',40.5521,14.2029,'13:30','上岛午餐主推：阿纳卡普里一侧，先安顿再去。','Anacapri'),
     spot('阿纳卡普里小镇',40.5517,14.2169,'16:00','第一天不硬塞蓝洞，留给海况更好的明天。','Anacapri'),
@@ -484,6 +484,7 @@ function overviewContent() {
     <div class="stay-row"><span class="stay-city">巴黎</span><div><span class="stay-name">巴黎里昂车站诺富特</span><span class="stay-meta">9/19–9/22 · 3 晚 · 预计 21:00 到店</span></div><span class="stay-state">已订</span></div>
     <div class="stay-row"><span class="stay-city">尼斯</span><div><span class="stay-name">尼斯市中心希尔顿逸林标志</span><span class="stay-meta">9/22–9/24 · 2 晚 · 预计 15:30 到店</span></div><span class="stay-state">已订</span></div>
     <div class="stay-row"><span class="stay-city">佛罗伦萨</span><div><span class="stay-name">佛罗伦萨霍克斯顿</span><span class="stay-meta">9/25–9/26 · 1 晚 · 夜间抵达后先寄存行李</span></div><span class="stay-state">已订</span></div>
+    <div class="stay-row"><span class="stay-city">索伦托</span><div><span class="stay-name">索伦托希尔顿酒店</span><span class="stay-meta">9/26–9/27 · 1 晚 · 那不勒斯转乘后入住</span></div><span class="stay-state">已订</span></div>
     <div class="stay-row"><span class="stay-city">卡普里</span><div><span class="stay-name">贝拉维斯塔 · 阿纳卡普里</span><span class="stay-meta">9/27–9/29 · 2 晚 · 预计 12:00 到店</span></div><span class="stay-state">已订</span></div>
     <div class="stay-row"><span class="stay-city">罗马</span><div><span class="stay-name">卡萨古特曼</span><span class="stay-meta">9/29–10/2 · 3 晚 · 预计 16:30 到店</span></div><span class="stay-state">已订</span></div>
   </section>
@@ -497,7 +498,7 @@ function overviewContent() {
   <div class="action-card"><div class="action-title">待预约</div><div class="action-value">卢浮宫、铁塔、乌菲兹<br>梵蒂冈、斗兽场、米其林</div></div>
 </div>
 <div class="section-head">先完成这些</div>
-<div class="card"><div class="name">🚆 交通购买决策</div><div class="desc"><b>9/24 尼斯 → 佛罗伦萨：</b>今日先查 Trenitalia / SNCF；只接受 ≤2 次换乘、每次至少留 35 分钟、到佛罗伦萨后能安全等到寄存行李的方案。搜索不到合适的跨夜组合时，不要硬买，改为补一晚尼斯或中转城。<br><br><b>9/26 佛罗伦萨 → 那不勒斯：</b>优先直达 Frecce；若选择晚班，必须确认抵达后有安全住宿或次日能赶上船。<br><br><b>卡普里船：</b>先锁 9/27 上岛，再买 9/29 下岛；船票以最终火车到站时间倒推，至少预留 90 分钟从 Napoli Centrale 到码头。</div><div class="links"><a class="btn rsv" target="_blank" href="https://www.trenitalia.com/en.html">打开 Trenitalia</a><a class="btn rsv" target="_blank" href="https://www.snav.it/en/">打开 SNAV 船票</a></div></div>
+<div class="card"><div class="name">🚆 交通购买决策</div><div class="desc"><b>9/24 尼斯 → 佛罗伦萨：</b>今日先查 Trenitalia / SNCF；只接受 ≤2 次换乘、每次至少留 35 分钟。<br><br><b>9/26 佛罗伦萨 → 那不勒斯 → 索伦托：</b>优先佛罗伦萨直达那不勒斯高铁，抵达后再接索伦托；你已有索伦托 1 晚酒店，不需要夜宿那不勒斯。<br><br><b>卡普里船：</b>先锁 9/27 索伦托→卡普里，再买 9/29 卡普里→那不勒斯；以最终火车和船班倒推。</div><div class="links"><a class="btn rsv" target="_blank" href="https://www.trenitalia.com/en.html">打开 Trenitalia</a><a class="btn rsv" target="_blank" href="https://www.snav.it/en/">打开 SNAV 船票</a></div></div>
 <div class="card" style="margin-top:10px"><div class="name">🧳 卡普里最后一公里（带行李）</div><div class="desc">船到 Marina Grande 后：<b>带行李优先出租车直达 Hotel Bellavista（Anacapri）</b>；轻装才考虑缆车上 Capri 镇再转 Anacapri 公交。不要把大箱子塞进拥挤公交；风浪、排队或晚到时直接打车并通知酒店。上岛日不要再排蓝洞。</div></div>
 <div class="card" style="margin-top:10px"><div class="name">🎟️ 购票执行卡</div><div class="desc"><b>现在按此顺序买：</b>卢浮宫 → 铁塔 → 梵蒂冈 → 斗兽场 → 乌菲兹 → Granite。每张门票卡均有“官方购票 + 携程打开后搜票”：官方用于核验规则与时段；携程打开后搜索“景点名 + 门票”，用于中文套餐和库存对比。每张票：姓名与护照一致、截图/邮件离线保存；先看改期退款规则。迟到或售罄时不买黄牛，直接按当天“失控方案”切换。</div></div>
 <div class="section-head">行程概览</div>
