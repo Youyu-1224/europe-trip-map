@@ -318,7 +318,7 @@ const SPOT_INFO = {
 };
 const food = (name, lat, lng, time, desc, city, detail='信用卡/Apple Pay/PayPal 是否可用请以现场为准。') =>
   ({name,lat,lng,type:'food',time,desc,budget:FOOD_INFO[name]?.budget,detail:[detail, FOOD_INFO[name]?.detail].filter(Boolean).join('\n'),pay:FOOD_INFO[name]?.pay,xhsKeyword:`${city} ${name}`,dianping:false,gmap:gm(`${name}, ${city}`)});
-const ticket = (budget, detail) => ({budget, detail, ticket:true});
+const ticket = (budget, detail, booked=false) => ({budget, detail, ticket:true, booked});
 const spot = (name, lat, lng, time, desc, query, reserve, ticketInfo={}) =>
   ({name,lat,lng,type:'spot',time,desc,gmap:gm(query),reserve,xhsKeyword:`${name} 拍照攻略`,...ticketInfo,detail:[ticketInfo.detail, SPOT_INFO[name]].filter(Boolean).join('\n')});
 const hotel = (name,lat,lng,time,query) => ({name,lat,lng,type:'hotel',time,desc:'入住 / 寄存行李后再开始当日活动。',gmap:gm(query)});
@@ -338,7 +338,7 @@ const DAYS = [
     food('Café de l’Industrie',48.8545,2.3706,'—','备选：玛黑方向法式小馆；不必专程排队。','Paris'),
     food('Brasserie Rosie',48.8572,2.3709,'—','备选：热闹小酒馆氛围，若前两家满位再去。','Paris') ] },
   { id:2,label:'D2 巴黎',date:'9月20日 周日 · 艺术日',title:'奥赛 → 卢浮宫 → 杜乐丽 → 塞纳河夜游',color:'#ff3b30',locations:[
-    spot('奥赛博物馆',48.8600,2.3266,'09:30','艺术日第一站：直上 5 楼看梵高、莫奈、雷诺阿；11:20 必须离馆。','Musée d’Orsay Paris','https://billetterie.musee-orsay.fr/',ticket('线上全票 €16','周日开放 09:30–18:00；建议预约 09:30。只走印象派精华，不尝试逛完整馆。')),
+    spot('奥赛博物馆',48.8600,2.3266,'以电子票为准','已购 2 人。艺术日第一站：直上 5 楼看梵高、莫奈、雷诺阿；11:20 必须离馆。','Musée d’Orsay Paris',undefined,ticket('已购 · 2 人','✅ 已购：2 人入场。入场时段以电子票为准；请出发前在本机相册或订单中打开条码给工作人员扫描。\n🔒 本公开页面不保存券号、条码或票面图片。只走印象派精华，不尝试逛完整馆。',true)),
     food('Le Fumoir',48.8605,2.3401,'11:45','卢浮宫附近午餐主推：奥赛出来步行过桥约 15 分钟，吃完直接去安检。','Paris','午餐只留 45–60 分钟；满位就附近简餐，不把午餐变成排队项目。'),
     spot('卢浮宫',48.8611,2.3380,'13:00','需买票 · 以 12:00–13:00 间最终可买时段为准；下午只走镇馆三宝。','Louvre Museum Paris','https://www.louvre.fr/en/visit/tickets-and-prices',ticket('非 EEA 成人 €32','9/20 上午已无票；当前计划改为 13:00 左右入馆。开放 09:00–18:00，17:00 停止入场。路线：胜利女神 → 蒙娜丽莎 → 断臂维纳斯。中国护照/非 EEA 适用 €32。')),
     spot('杜乐丽花园',48.8635,2.3278,'16:30','卢浮宫出来只走中轴线、喷泉与绿椅区，作为两座美术馆后的缓冲。','Tuileries Garden Paris'),
@@ -509,13 +509,13 @@ function overviewContent() {
 </div>
 <div class="action-grid">
   <div class="action-card"><div class="action-title">待购买交通</div><div class="action-value">9/26 佛罗伦萨→索伦托<br>9/27、9/29 两段船票<br>两段已购长途交通见下方</div></div>
-  <div class="action-card"><div class="action-title">待预约</div><div class="action-value">奥赛、卢浮宫、铁塔<br>梵蒂冈、斗兽场、Granite</div></div>
+  <div class="action-card"><div class="action-title">待预约</div><div class="action-value">卢浮宫、铁塔、梵蒂冈<br>斗兽场、Granite</div></div>
 </div>
 <div class="section-head">先完成这些</div>
 <div class="card"><div class="name">🚆 交通购买决策</div><div class="desc"><b>已购：</b>9/22 OUIGO 7853 巴黎 Gare de Lyon 16:10 → Nice-Ville 22:13；9/24 夜巴 N523 Nice Airport T1 23:45 → Florence Villa Costanza 05:55。<br><br><b>接下来购买：</b>① 9/26 佛罗伦萨→那不勒斯高铁；② 9/27 索伦托→卡普里上午船；③ 9/29 卡普里→那不勒斯上午船。<br><br><b>硬规则：</b>火车换乘至少 35 分钟；港口转火车至少 90 分钟；每张电子票离线保存。未买票的高铁和船票绝不写成固定班次或价格。</div><div class="links"><a class="btn rsv" target="_blank" href="https://www.trenitalia.com/en.html">意铁高铁</a><a class="btn rsv" target="_blank" href="https://easy.caremar.it/en/">Caremar 船票</a></div></div>
 <div class="card" style="margin-top:10px"><div class="name">⏱️ 全程移动时间线：按“到门口”而不是“车开走”算</div><div class="desc"><b>9/19 杭州→巴黎：</b>07:00 到萧山 T4；北京只留 2:05 中转，必须核实行李直挂；CDG 18:15 落地，正常 20:15–20:45 出到达层，保守 21:15；正常 21:30–22:30 到巴黎酒店。<br><br><b>9/22 巴黎→尼斯：</b>15:15 回巴黎酒店取行李，15:35 到 Gare de Lyon；OUIGO 7853 16:10 从 Hall 1 & 2 出发，22:13 到 Nice-Ville，步行 4–6 分钟到酒店。<br><br><b>9/24 尼斯→佛罗伦萨：</b>21:45 回酒店取行李，22:15 左右吃完早晚餐，22:50 前到 Nice Airport T1；已购 N523 23:45 出发，9/25 05:55 到 Florence Villa Costanza。<br><br><b>9/26 佛罗伦萨→索伦托：</b>13:15 到 Firenze SMN，目标 13:30–14:30 高铁；约 18:15–18:45 到 Napoli Centrale；约 19:45–20:30 到 Sorrento，再出租 5–10 分钟到 Hilton。<br><br><b>9/27 索伦托→卡普里：</b>08:35 离酒店、08:55 到码头、09:25→09:57 船；10:40–11:15 到 Anacapri 酒店寄存行李。<br><br><b>9/29 卡普里→罗马：</b>08:20 离酒店、09:40→11:05 船到 Napoli；12:00 前到 Napoli Centrale；只买 13:15 后去 Roma Termini 的高铁；15:30–16:30 到酒店。<br><br><b>10/2 罗马→机场：</b>15:00 离酒店、15:30 前到 Termini，Leonardo Express 32 分钟/€14；16:20–16:45 到 FCO T3，先退税再值机，19:45 前到登机口。</div></div>
 <div class="card" style="margin-top:10px"><div class="name">🧳 卡普里最后一公里（带行李）</div><div class="desc">船到 Marina Grande 后：<b>带行李优先出租车直达 Hotel Bellavista（Anacapri）</b>；轻装才考虑缆车上 Capri 镇再转 Anacapri 公交。不要把大箱子塞进拥挤公交；风浪、排队或晚到时直接打车并通知酒店。上岛日不要再排蓝洞。</div></div>
-<div class="card" style="margin-top:10px"><div class="name">🎟️ 购票执行卡</div><div class="desc"><b>现在按此顺序买：</b>奥赛 → 卢浮宫 → 铁塔 → 梵蒂冈 → 斗兽场 → Granite。乌菲兹已从主线删除，不必买票。每张门票卡均有“官方购票 + 携程打开后搜票”：官方用于核验规则与时段；携程打开后搜索“景点名 + 门票”，用于中文套餐和库存对比。每张票：姓名与护照一致、截图/邮件离线保存；先看改期退款规则。迟到或售罄时不买黄牛，直接按当天“失控方案”切换。</div></div>
+<div class="card" style="margin-top:10px"><div class="name">🎟️ 购票执行卡</div><div class="desc"><b>已购：</b>奥赛 2 人；条码仅在本机相册或订单中出示，公开页面不保存票面。<br><br><b>现在按此顺序买：</b>卢浮宫 → 铁塔 → 梵蒂冈 → 斗兽场 → Granite。乌菲兹已从主线删除，不必买票。每张未购票卡均有“官方购票 + 携程打开后搜票”：官方用于核验规则与时段；携程打开后搜索“景点名 + 门票”，用于中文套餐和库存对比。每张票：姓名与护照一致、截图/邮件离线保存；先看改期退款规则。迟到或售罄时不买黄牛，直接按当天“失控方案”切换。</div></div>
 <div class="section-head">行程概览</div>
 <div class="day-list">${DAYS.slice(1).map(d=>`<div class="card" onclick="go(${d.id})"><div class="name"><span class="dot" style="background:${d.color}"></span>${d.label} · ${d.title}</div><div class="desc">${d.date}</div></div>`).join('')}</div>
 <div class="section-head">使用提醒</div>
@@ -668,7 +668,7 @@ function openDp(key)  { return openExt(key, 'dp'); }
 
 function locCard(loc, dayIdx) {
   const dot = loc.type==='food'?'food':loc.type==='spot'?'spot':loc.type==='drink'?'drink':loc.type==='hotel'?'hotel':'transport';
-  const bdg = loc.type==='food'?'<span class="badge food">餐</span>':loc.type==='spot'?'<span class="badge spot">景</span>':loc.type==='drink'?'<span class="badge drink">饮</span>':'';
+  const bdg = loc.booked ? '<span class="badge spot">已购</span>' : loc.type==='food'?'<span class="badge food">餐</span>':loc.type==='spot'?'<span class="badge spot">景</span>':loc.type==='drink'?'<span class="badge drink">饮</span>':'';
   const uid = `d${dayIdx}-${loc.name.replace(/\W/g,'')}`;
   const locKey = `${dayIdx}::${loc.name}`;
   const gmapQ = loc.gmap||encodeURIComponent(loc.name);
@@ -687,8 +687,8 @@ function locCard(loc, dayIdx) {
     const dpLabel = IN_APP_WEBVIEW ? '🍜 大众点评' : '🍜 大众点评 App';
     lnk += `<a href="${dpHref}" onclick="return openDp('${locKey.replace(/'/g,"\\'")}')" class="btn dp">${dpLabel}</a>`;
   }
-  if(loc.reserve) lnk += `<a href="${loc.reserve}" target="_blank" rel="noopener" class="btn rsv">${loc.ticket ? '🎟️ 官方购票' : '📅 预约'}</a>`;
-  if(loc.ticket) lnk += `<a href="${ctripTicketUrl()}" target="_blank" rel="noopener" class="btn ctrip">携程打开后搜票</a>`;
+  if(loc.reserve && !loc.booked) lnk += `<a href="${loc.reserve}" target="_blank" rel="noopener" class="btn rsv">${loc.ticket ? '🎟️ 官方购票' : '📅 预约'}</a>`;
+  if(loc.ticket && !loc.booked) lnk += `<a href="${ctripTicketUrl()}" target="_blank" rel="noopener" class="btn ctrip">携程打开后搜票</a>`;
   return `<div class="tl-item"><div class="tl-dot ${dot}"></div><div class="card" onclick="if(!event.target.closest('.btn,.links'))toggle('${uid}')"><div class="time">${loc.time!=='—'?loc.time:'备选'}</div><div class="name">${bdg} ${loc.name}</div><div class="desc">${loc.desc}</div>${loc.budget?'<div class="budget">'+loc.budget+'</div>':''}${payChips(loc.pay)}<div class="links">${lnk}</div>${loc.detail?'<div class="details" id="'+uid+'">'+loc.detail.replace(/\n/g,'<br>')+'</div>':''}</div></div>`;
 }
 
