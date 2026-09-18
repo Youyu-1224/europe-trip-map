@@ -280,6 +280,9 @@ const FOOD_INFO = {
   'All’Antico Vinaio': { budget:'人均 €10–20', pay:{card:1}, detail:'营业：每日 10:00–22:00。支付：已确认信用卡；Apple Pay/PayPal 未公开。热门时排队明显。' },
   'Da Gelsomina': { pay:{card:1}, detail:'营业信息当前显示每日 09:00–23:00；餐厅通常在 10 月中旬至 3 月中旬休业。支付：已确认信用卡；价格未找到可靠人均。' },
   'Il Solitario': { budget:'人均 €30–40', pay:{card:1}, detail:'营业：午 12:00–14:30、晚 19:00–22:30；周一休。支付：已确认信用卡；Apple Pay/PayPal 未公开。' },
+  'Sorrento Il Ristorante': { detail:'营业：每日 18:30–22:30（最后点单以当日为准）。就在 Hilton Sorrento Palace 内，适合换城晚到后的稳妥晚餐；支付方式未公开，现场确认。' },
+  'Il Leone Rosso': { detail:'营业：每日 11:30–23:00。索伦托市中心传统菜与披萨，适合酒店餐厅满位或想进城时；支付方式未公开，现场确认。' },
+  'Verginiello': { budget:'人均 €€', detail:'营业：每日午 12:00–15:00、晚 19:00–23:00。Piazzetta 与公交站附近，适合奥古斯都花园后午餐；支付方式未公开，现场确认。' },
   'La Capannina': { budget:'人均 €€€', detail:'营业：每日 12:00–15:00、19:00–23:00。价格为卡普里岛高档档位；暂无可信统一人均和支付方式，现场核验。' },
   'L’Olivo': { budget:'高档（€€€€）', detail:'营业：每日晚餐 19:30–22:30。菜单可见主菜约 €70，但完整套餐与支付方式请订位页确认，不能据此伪造人均。' },
   'La Zanzara': { budget:'人均 €20–60', detail:'营业：每日 12:00–01:00；午餐 12:00–16:00、晚餐 19:00–23:30。支付方式未在官网公开。' },
@@ -316,6 +319,12 @@ const SPOT_INFO = {
   '纳沃纳广场':'📷从四河喷泉侧拍广场纵深；傍晚蓝调时刻比正午更好看。\n🧭梵蒂冈出来体力不足就只走到这里，余下老城留给第二天或晚餐前。',
   '罗马斗兽场 + 古罗马广场 + 帕拉蒂尼山':'📍必须按实名时段进斗兽场，提前 15 分钟到 Valadier Spur 一侧入口。\n📷外景优先在 Arch of Constantine 一侧拍全景；广场内逆光强，人物用侧光/树荫。\n🧭斗兽场 75 分钟后，古罗马广场与帕拉蒂尼只选一条主线；太热直接缩短，不要硬走全程。',
   '特雷维喷泉':'📷上午或临近傍晚更好；正面人多就站侧边用喷泉局部和人物近景。\n⚠️别把“抛硬币”做成停留 30 分钟的任务，人潮过密就拍完离开。',
+  'Monte Solaro Chairlift':'📍从 Anacapri 的 Piazza Vittoria 上车，单程约 13 分钟；上山前先收好围巾、帽子和手机。\n📷山顶别只拍海：把索伦托半岛、海岸线和人一起收进横构图更有层次。\n🧭往返票 €15；最晚在下午前段开始排队，避免因末班或天气影响下山。',
+  '君士坦丁凯旋门':'📍在斗兽场西侧，抵达罗马当晚只看外观与夕阳，不占用次日正式票务时间。\n📷从西北侧可把凯旋门与斗兽场同框；晚到或疲惫就直接删掉。',
+  '西班牙广场':'📷不必挤在台阶中央，站在喷泉侧或从台阶向下取景更自然。\n🧭梵蒂冈后第一站，停 20–30 分钟即可，随后步行去万神庙。',
+  '万神庙':'📷外立面与柱廊更适合拍照；内部仰拍前先确认当日提示。\n🧭从西班牙广场步行过来，之后接纳沃纳广场，不走回头路。',
+  '圣彼得大教堂':'📍教堂本体免费但必须安检，返程日早到排队；穹顶另计且不排入今天。\n📷广场柱廊和正立面比匆忙进馆更稳；注意遮肩、过膝着装。\n🧭超过 09:45 还未入场就改为广场外观，保证 15:00 去机场。',
+  '圣天使桥与城堡外观':'📷桥中央拍圣天使堡，上午光线更柔；只拍外观，不入城堡。\n🧭从圣彼得步行过来后就返回酒店取行李，不再跨区。',
 };
 const food = (name, lat, lng, time, desc, city, detail='信用卡/Apple Pay/PayPal 是否可用请以现场为准。') =>
   ({name,lat,lng,type:'food',time,desc,budget:FOOD_INFO[name]?.budget,detail:[detail, FOOD_INFO[name]?.detail].filter(Boolean).join('\n'),pay:FOOD_INFO[name]?.pay,xhsKeyword:`${city} ${name}`,dianping:false,gmap:gm(`${name}, ${city}`)});
@@ -323,153 +332,166 @@ const ticket = (budget, detail) => ({budget, detail, ticket:true});
 const spot = (name, lat, lng, time, desc, query, reserve, ticketInfo={}) =>
   ({name,lat,lng,type:'spot',time,desc,gmap:gm(query),reserve,xhsKeyword:`${name} 拍照攻略`,...ticketInfo,detail:[ticketInfo.detail, SPOT_INFO[name]].filter(Boolean).join('\n')});
 const hotel = (name,lat,lng,time,query) => ({name,lat,lng,type:'hotel',time,desc:'入住 / 寄存行李后再开始当日活动。',gmap:gm(query)});
-const transport = (name,lat,lng,time,desc,query,reserve,status='pending') => ({
+const transport = (name,lat,lng,time,desc,query,reserve,status='pending',detail='') => ({
   name,lat,lng,type:'transport',time,desc,gmap:gm(query),reserve,
-  detail: status==='booked' ? '✅ 已订票：以航司 App / 电子客票上的实时值机、登机口和行李规定为准。' : '⚠️ 尚未购买：请打开官方链接比价、确认行李与换乘后下单。'
+  detail: [status==='booked' ? '✅ 已订票：以航司 App / 电子客票上的实时值机、登机口和行李规定为准。' : '⚠️ 尚未购买：请打开官方链接比价、确认行李与换乘后下单。', detail].filter(Boolean).join('\n')
 });
 
 const DAYS = [
   { id:0, label:'总览', color:'#0071e3', locations:[] },
   { id:1,label:'D1 巴黎',date:'9月19日 周六 · 抵达',title:'巴黎抵达与酒店周边',color:'#ff9500',locations:[
-    transport('杭州萧山 T4 → 北京首都 T3',30.2295,120.4344,'09:00','CA1705，11:25 抵达北京首都 T3。','Hangzhou Xiaoshan International Airport Terminal 4',undefined,'booked'),
-    transport('北京首都 T3 → 巴黎戴高乐 T1',40.6413,116.5926,'13:30','CA933，18:15 抵达巴黎戴高乐 T1。','Beijing Capital International Airport Terminal 3',undefined,'booked'),
-    transport('巴黎戴高乐机场 T1 → 酒店',49.0097,2.5479,'18:15','入境、取行李、进城；预计晚间抵达酒店。','CDG Terminal 1','https://www.ratp.fr/en'),
-    hotel('巴黎里昂车站诺富特酒店',48.8450,2.3711,'21:00','2 Rue Hector Malot，连住 3 晚。','Novotel Paris Gare de Lyon'),
+    transport('杭州萧山 T4 → 北京首都 T3',30.2295,120.4344,'09:00','CA1705 已订：09:00 起飞、11:25 到北京 T3。建议 07:00 到萧山 T4。','Hangzhou Xiaoshan International Airport Terminal 4',undefined,'booked','06:45 到 T4 出发层 → 07:00 办值机/托运 → 07:45 安检完成 → 08:15 到登机口；08:30 开始留意登机。\n北京落地后不出航站楼：11:40–12:00 下机、按“国际中转/Transfer”走；12:00–12:30 安检与证件核验；12:30 前必须到 CA933 登机口附近。\n⚠️最关键：现在在国航 App/订单里核对两段是否同一张联程票、行李是否直挂巴黎。若不能直挂，需要入境提行李再国际值机，2 小时 05 分钟非常危险，应立即联系国航确认。'),
+    transport('北京首都 T3 → 巴黎戴高乐 T1',40.6413,116.5926,'13:30','CA933 已订：13:30 起飞、18:15 抵达巴黎 CDG T1。','Beijing Capital International Airport Terminal 3',undefined,'booked','12:50 起开始登机，13:10 前不要离开登机口区域。到达 CDG 后以 18:15 为“机轮落地”而非出机场时间：正常 19:30–20:20 到行李厅；保守 20:30–21:15 才出公共到达层。'),
+    transport('巴黎戴高乐机场 T1 → 酒店',49.0097,2.5479,'20:15','正常 20:15–20:45 出机场；优先 Uber/Bolt 直达，保守 21:30–22:30 到酒店。','CDG Terminal 1','https://www.ratp.fr/en','pending','推荐：20:15–20:45 出 T1 到达层后直接叫 Uber/Bolt；车程约 45–75 分钟，到 Novotel Paris Gare de Lyon 门口。费用不写死：堵车、夜间和供需会浮动，App 显示总价后再确认。\n省钱备选：T1 先坐 CDGVAL 到 RER B 区域 → RER B 入城 → Châtelet–Les Halles 转地铁 14 号线至 Gare de Lyon → 步行约 5 分钟到酒店；全程约 65–85 分钟，巴黎机场铁路票 €14/人（可在手机/Navigo Easy 购买）。\n21:15 还没离开航站楼，或多人带大箱子：不要再选 RER，直接打车。'),
+    hotel('巴黎里昂车站诺富特酒店',48.8450,2.3711,'21:30','2 Rue Hector Malot，连住 3 晚。正常 21:30–22:30 入住；航班延误则直接办理入住休息。','Novotel Paris Gare de Lyon'),
     food('Le Train Bleu',48.8449,2.3735,'21:30','里昂车站内，首晚优先走得近、无需跨区。','Paris','首晚抵达晚，出发前请确认营业与是否需订位。'),
     food('Café de l’Industrie',48.8545,2.3706,'—','备选：玛黑方向法式小馆；不必专程排队。','Paris'),
     food('Brasserie Rosie',48.8572,2.3709,'—','备选：热闹小酒馆氛围，若前两家满位再去。','Paris') ] },
-  { id:2,label:'D2 巴黎',date:'9月20日 周日 · 奥赛与卢浮宫',title:'奥赛 → 卢浮宫 → 玛黑',color:'#ff3b30',locations:[
+  { id:2,label:'D2 巴黎',date:'9月20日 周日 · 艺术日',title:'奥赛 → 卢浮宫 → 杜乐丽 → 塞纳河夜游',color:'#ff3b30',locations:[
     spot('奥赛博物馆',48.8600,2.3266,'09:30','艺术日第一站：直上 5 楼看梵高、莫奈、雷诺阿；11:20 必须离馆。','Musée d’Orsay Paris','https://billetterie.musee-orsay.fr/',ticket('线上全票 €16','周日开放 09:30–18:00；建议预约 09:30。只走印象派精华，不尝试逛完整馆。')),
     food('Le Fumoir',48.8605,2.3401,'11:45','卢浮宫附近午餐主推：奥赛出来步行过桥约 15 分钟，吃完直接去安检。','Paris','午餐只留 45–60 分钟；满位就附近简餐，不把午餐变成排队项目。'),
     spot('卢浮宫',48.8611,2.3380,'13:00','需买票 · 以 12:00–13:00 间最终可买时段为准；下午只走镇馆三宝。','Louvre Museum Paris','https://www.louvre.fr/en/visit/tickets-and-prices',ticket('非 EEA 成人 €32','9/20 上午已无票；当前计划改为 13:00 左右入馆。开放 09:00–18:00，17:00 停止入场。路线：胜利女神 → 蒙娜丽莎 → 断臂维纳斯。中国护照/非 EEA 适用 €32。')),
-    spot('巴黎圣母院周边',48.8530,2.3499,'16:45','卢浮宫离馆后沿塞纳河去圣母院，再进玛黑。','Notre-Dame de Paris'),
-    food('Le Petit Marché',48.8561,2.3646,'19:00','晚餐主推：周日晚餐正常营业，继续留在玛黑。','Paris'),
-    food('Au Bourguignon du Marais',48.8578,2.3619,'—','备选仅适用于非周日；本行程当晚不营业，不要前往。','Paris'),
-    food('L’As du Fallafel',48.8571,2.3599,'—','备选：想吃快一点时选；热门时同样会排队。','Paris') ] },
-  { id:3,label:'D3 巴黎',date:'9月21日 周一 · 铁塔与米其林',title:'埃菲尔铁塔 → 法国米其林',color:'#af52de',locations:[
-    spot('埃菲尔铁塔',48.8583,2.2945,'09:30','需买票 · 只按最终预约时段到场；安检和上塔时间需留余量。','Eiffel Tower Paris','https://ticket.toureiffel.paris/en',ticket('登顶电梯 成人 €36.70','9/21 开放 09:30–23:00。计划预约：09:30；电梯至二层 €23.50，电梯至顶层 €36.70。顶层可能因风或客流限制，请优先买官网时段票。')),
-    food('Granite',48.8610,2.3420,'12:45','法国米其林主推：巴黎一星；优先午餐，需提前订位。','Paris','米其林指南列为一星。价格、菜单和空位请以餐厅订位页为准。'),
-    spot('杜乐丽花园',48.8635,2.3278,'15:30','饭后经杜乐丽、协和广场散步；16:40 左右地铁前往蒙马特。','Tuileries Garden Paris'),
-    spot('圣心堂与蒙马特日落',48.8867,2.3431,'17:30','先到圣心堂平台等日落；9/21 日落约 19:50。看完直接下山去晚餐。','Sacré-Cœur Basilica Paris'),
-    food('Le Petit Marché',48.8561,2.3646,'21:00','日落后晚餐主推：周一营业；从蒙马特下山后地铁前往。','Paris'),
-    food('Restaurant H',48.8738,2.3147,'—','备选米其林：若 Granite 无位，再自行核验菜单与空位。','Paris'),
-    food('Le Baudelaire',48.8705,2.3289,'—','备选米其林：酒店餐厅风格，作为正式晚餐替代。','Paris') ] },
+    spot('杜乐丽花园',48.8635,2.3278,'16:30','卢浮宫出来只走中轴线、喷泉与绿椅区，作为两座美术馆后的缓冲。','Tuileries Garden Paris'),
+    food('Le Petit Marché',48.8561,2.3646,'19:00','晚餐主推：周日晚餐正常营业；若累就提前吃，再去坐船。','Paris'),
+    food('L’As du Fallafel',48.8571,2.3599,'—','备选：想快吃时选；热门时同样会排队。','Paris'),
+    transport('塞纳河游船',48.8586,2.2945,'21:00','20:30 前到最终码头换票/安检；21:00 左右上船看铁塔亮灯。','Seine River Cruise Paris','https://www.vedettesdupontneuf.com/en','pending','从晚餐区预留 30–40 分钟到码头；不同公司码头不同，订票后把“码头名 + 上船时间”写入订单。成人常见 €17–25，但以最终船公司为准。20:30 前赶不到码头就删游船，改塞纳河岸看铁塔，不追末班。') ] },
+  { id:3,label:'D3 巴黎',date:'9月21日 周一 · 老城与蒙马特',title:'圣母院 → 玛黑 → 米其林 → 歌剧院 → 日落',color:'#af52de',locations:[
+    spot('巴黎圣母院周边',48.8530,2.3499,'10:00','先沿 Île de la Cité 和河岸慢走；不把入内排队写死。','Notre-Dame de Paris'),
+    spot('玛黑区 citywalk',48.8566,2.3610,'11:15','从圣母院向东进入玛黑，逛店、咖啡和小街；不额外跨区。','Le Marais Paris'),
+    food('Granite',48.8610,2.3420,'12:45','法国米其林主推：巴黎一星午餐，必须先订位；从玛黑乘地铁/步行前往。','Paris','米其林指南列为一星。价格、菜单和空位请以餐厅订位页为准。'),
+    spot('巴黎歌剧院',48.8719,2.3316,'15:30','只按最终开放和入场规则参观；外观＋大厅预留约 1 小时。','Palais Garnier Paris'),
+    spot('圣心堂与蒙马特日落',48.8867,2.3431,'17:30','日落前 30–40 分钟到平台；看完直接下山去晚餐，不在阶梯久留。','Sacré-Cœur Basilica Paris'),
+    food('Le Petit Marché',48.8561,2.3646,'21:00','日落后晚餐主推：周一营业；从蒙马特下山后回玛黑。','Paris'),
+    food('Restaurant H',48.8738,2.3147,'—','米其林备选：Granite 无位时再核验菜单与空位。','Paris') ] },
   { id:4,label:'D4 尼斯',date:'9月22日 周二 · 巴黎 → 尼斯',title:'抵达尼斯与酒店周边',color:'#34c759',locations:[
-    transport('巴黎 → 尼斯',48.8449,2.3735,'09:30','法国境内火车 / 航班请按最终购买结果调整。','Paris Gare de Lyon','https://www.sncf-connect.com/en-en/'),
-    hotel('尼斯市中心希尔顿逸林标志酒店',43.7051,7.2634,'15:30','8 Avenue Thiers，连住 2 晚。','DoubleTree by Hilton Nice Centre Iconic'),
-    spot('马塞纳广场与让·梅德桑大道',43.6977,7.2700,'17:00','抵达日只在酒店周边轻松散步、买补给；完整海边日落留给 D5。','Place Masséna Nice'),
-    food('Le Vingt4',43.7027,7.2657,'19:00','首晚主推：酒店周边步行可达，适合抵达后快速吃。','Nice'),
+    spot('埃菲尔铁塔',48.8583,2.2945,'09:30','需买票 · 只按最终预约时段到场；安检和上塔时间需留余量。','Eiffel Tower Paris','https://ticket.toureiffel.paris/en',ticket('登顶电梯 成人 €36.70','9/22 预约时段待购买。电梯至二层 €23.50，至顶层 €36.70；优先官网时段票。')),
+    spot('香榭丽舍大街',48.8698,2.3076,'12:00','从铁塔方向进香街，只保留购物与街景，不走到累。','Champs-Élysées Paris'),
+    spot('凯旋门',48.8738,2.2950,'14:00','外观或按最终票务登顶；14:45 开始往酒店取行李。','Arc de Triomphe Paris'),
+    transport('巴黎 Gare de Lyon → Nice-Ville',48.8449,2.3735,'16:30','14:45 离凯旋门 → 15:15 到巴黎酒店取行李 → 15:35 到 Gare de Lyon；优先 16:30 左右直达/少换乘 TGV。','Paris Gare de Lyon','https://www.sncf-connect.com/en-en/','pending','车票未买，不能伪造具体车次。SNCF 当前公布巴黎—尼斯最快约 5 小时 34 分、平均约 6 小时 17 分，票价可从 €29 起；16:30 出发的保守抵达是 22:00–23:15。\n购票筛选：只选“直达”优先；如必须换乘，最多 1 次且留 ≥35 分钟。电子票登车前打开并离线截图；15:50 前必须到站内找月台，16:05 后不再逛站外。\n错过车：立刻在 SNCF App 查“同日下一班/改签”，并给酒店发晚到消息；不要临时去机场改飞。'),
+    hotel('尼斯市中心希尔顿逸林标志酒店',43.7051,7.2634,'22:30','8 Avenue Thiers，连住 2 晚；Nice-Ville 出站步行约 4–6 分钟到店。预计 22:15–23:30 入住。','DoubleTree by Hilton Nice Centre Iconic'),
+    food('Le Vingt4',43.7027,7.2657,'—','抵达晚餐备选：若到店太晚不强求，优先酒店周边仍营业的简餐。','Nice'),
     food('La Femme du Boulanger',43.6984,7.2672,'—','备选：尼斯市中心法餐，满位就换下一家。','Nice'),
     food('Les Sens',43.7000,7.2653,'—','备选：市中心近酒店，适合不想走远。','Nice') ] },
   { id:5,label:'D5 尼斯',date:'9月23日 周三 · 摩纳哥与芒通',title:'摩纳哥 → 芒通一日游',color:'#00c7be',locations:[
-    transport('尼斯 → 摩纳哥',43.7004,7.2684,'09:00','坐 TER 前往摩纳哥；当天只以公共交通为主，不租车。','Nice-Ville'),
-    spot('摩纳哥亲王宫与港口',43.7313,7.4197,'10:00','老城、亲王宫外观和港口；不额外塞赌场参观。','Prince Palace Monaco'),
-    transport('摩纳哥 → 芒通',43.7317,7.4196,'13:30','午餐后继续坐 TER 到芒通。','Monaco Monte Carlo Station'),
-    spot('芒通老城与海湾',43.7745,7.5044,'14:15','彩色老城、海湾和柠檬小镇慢走；17:30 左右回尼斯。','Menton Old Town'),
+    transport('尼斯 Nice-Ville → Monaco–Monte-Carlo',43.7004,7.2684,'08:50','08:25 从酒店步行到 Nice-Ville；选 08:50 左右 TER，约 09:15–09:25 到摩纳哥。','Nice-Ville','https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/trajet-nice-menton','pending','Nice–Menton TER 平均约 40 分钟、标准单程 €7.70；摩纳哥在中段，实际以当日时刻板为准。建议直接买 Nice–Menton 当日票并在车上/站内核对停靠规则；08:40 还未上车，就改下一班，不为赶亲王宫打车。\nMonaco 站出站到老城/亲王宫为上坡，步行约 20 分钟；带不舒服的鞋就公交/电梯，不要硬爬。'),
+    spot('摩纳哥亲王宫与港口',43.7313,7.4197,'09:30','上午走老城、亲王宫外观、观景台和港口；不进赌场、不加埃兹。','Prince Palace Monaco'),
+    transport('摩纳哥 → 芒通 Menton',43.7317,7.4196,'13:30','13:10 回 Monaco–Monte-Carlo 站；13:30 左右 TER，约 13:55–14:05 到 Menton。','Monaco Monte Carlo Station','https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/trajet-nice-menton','pending','票价通常计入 Nice–Menton 区间；最终以自动售票机/TER App 为准。17:15 开始往 Menton 站走，目标 17:30–18:00 上返程；到 Nice-Ville 后步行回酒店约 5 分钟。若摩纳哥午餐拖到 13:45，直接删芒通，在摩纳哥多玩后回尼斯。'),
+    spot('芒通老城与海湾',43.7745,7.5044,'14:00','彩色老城、海湾与海边步道慢走；17:30 左右开始回尼斯。','Menton Old Town'),
     food('Chez Acchiardo',43.6966,7.2762,'19:30','晚餐主推：老城尼斯菜；以提前订位优先。','Nice','当地评价对传统尼斯菜较认可；避免临近饭点才到。'),
     food('Lou Pilha Leva',43.6967,7.2752,'—','备选午餐：老城快速小吃。','Nice'),
     food('Bistrot d’Antoine',43.6967,7.2710,'—','备选晚餐：老城小酒馆，热门时可能排队。','Nice'),
     food('La Vague',43.6965,7.2755,'—','备选：小红书同时有推荐与避雷，点单前再看近评。','Nice') ] },
   { id:6,label:'D6 夜车',date:'9月24日 周四 · 尼斯 → 佛罗伦萨',title:'尼斯海岸 → 跨夜交通',color:'#5856d6',locations:[
-    spot('马塞纳广场、太阳喷泉与天使湾',43.6977,7.2700,'10:00','退房后走市区主线：马塞纳广场 → 太阳喷泉 → 天使湾；不再加夏加尔。','Place Masséna Nice'),
-    spot('城堡山',43.6949,7.2806,'12:00','登高看天使湾，13:00 前下山吃午餐。','Castle Hill Nice'),
-    food('La Merenda',43.6968,7.2745,'13:00','退房日午餐主推；先查是否营业。','Nice'),
-    spot('滨海自由城 Villefranche-sur-Mer',43.7041,7.3128,'14:30','下午坐短程火车/公交去海湾、老城和沙滩；17:30 回尼斯酒店取行李。','Villefranche-sur-Mer'),
-    transport('尼斯 → 佛罗伦萨（跨夜）',43.7004,7.2684,'20:00','酒店 9/25 才入住：今晚直接夜行前往下一城。','Nice-Ville','https://www.trenitalia.com/en.html'),
+    spot('马塞纳广场、太阳喷泉与天使湾',43.6977,7.2700,'10:00','退房寄存行李后：马塞纳广场与太阳喷泉 → 老城 → 城堡山 → 海角与天使湾。','Place Masséna Nice'),
+    spot('尼斯老城',43.6964,7.2760,'10:30','沿 Cours Saleya 进老城，作为去城堡山的单向过渡。','Nice Old Town'),
+    spot('城堡山',43.6949,7.2806,'11:30','优先电梯/缓坡上山；从高处拍天使湾全景。','Castle Hill Nice'),
+    spot('Rauba Capeu 观景台',43.6928,7.2849,'12:30','下山顺路停 15–20 分钟，拍天使湾、海角与漫步道。','Rauba Capeu Nice'),
+    food('La Merenda',43.6968,7.2745,'13:15','退房日午餐主推；周四正常午市，但到店前再核验。','Nice'),
+    spot('英国人漫步道',43.6931,7.2668,'14:30','午后沿天使湾慢走、看海；不再加滨海自由城或昂蒂布。','Promenade des Anglais Nice'),
+    transport('尼斯 → 佛罗伦萨（跨夜）',43.7004,7.2684,'20:30 后','16:00 回酒店取行李、17:00 前吃早晚餐；只购买 20:30 后出发、9/25 早晨抵达的夜巴方案。','Nice-Ville','https://global.flixbus.com/','pending','这段仍未购票，页面不再假装已有“23:45→05:55”具体车次。优先 FlixBus / BlaBlaCar Bus 查 Nice（注意上车点）→ Firenze 的夜班；购买时只接受：上车点从酒店到站 ≤30 分钟、到达时间 06:00–08:30、行李已含、无需要半夜换乘的方案。\n预算先按 €25–60/人留，不把浮动票价写成固定价格；9/23 前买最稳。最终选定后，把“车次、上车站、检票最晚时间、下车站”替换进这张卡。\n若只搜到白天换乘火车：不强行夜行，改为最顺的一次/两次换乘并调整佛罗伦萨上午行程；不要买 >2 次换乘或半夜站外换站方案。'),
     food('Le Vingt4',43.7027,7.2657,'—','备选：若出发前需要早晚餐，回酒店附近吃最稳。','Nice') ] },
-  { id:7,label:'D7 佛罗伦萨',date:'9月25日 周五 · 抵达与老城',title:'佛罗伦萨入住 → 主教堂区',color:'#ff9500',locations:[
-    hotel('佛罗伦萨霍克斯顿酒店',43.7816,11.2582,'10:00','Via delle Mantellate 2，仅住 1 晚。','The Hoxton Florence'),
-    spot('圣母百花大教堂',43.7731,11.2560,'11:30','只走外观与广场；登顶需另留预约时间。','Florence Cathedral'),
-    food('Mercato Centrale',43.7771,11.2537,'13:00','午餐主推：第一天按体力灵活选摊，不强行订位。','Florence'),
-    spot('旧宫与领主广场',43.7697,11.2558,'15:30','看旧宫塔楼外观、雕像和广场；体力够再进塔。','Palazzo Vecchio Florence'),
-    spot('玫瑰园 → 米开朗琪罗广场',43.7589,11.2624,'17:30','日落前沿玫瑰园慢慢上坡到广场，横构图拍穹顶、老桥和阿诺河。','Giardino delle Rose Florence'),
-    food('Trattoria dall’Oste',43.7757,11.2471,'19:30','晚餐主推：牛排为主，热门，建议先订位。','Florence','小红书高频候选；晚高峰与分量是重点，点餐量力而行。'),
-    food('Trattoria Zà Zà',43.7772,11.2540,'—','备选：中央市场旁，行程更顺路。','Florence'),
-    food('Osteria Pastella',43.7729,11.2470,'—','备选：松露意面热门；近期评价有排队、价格与份量分歧。','Florence') ] },
-  { id:8,label:'D8 索伦托',date:'9月26日 周六 · 佛罗伦萨 → 索伦托',title:'佛罗伦萨半日 → 索伦托入住',color:'#5856d6',locations:[
-    spot('佛罗伦萨老城晨间 citywalk',43.7714,11.2558,'09:30','只在主教堂区、旧桥附近轻走；今天不去比萨，避免错过 14:00 左右南下交通。','Florence Historic Centre'),
-    food('All’Antico Vinaio',43.7683,11.2560,'11:30','午餐主推：佛卡夏三明治；热门，排队超过 20 分钟就换备选。','Florence'),
-    transport('佛罗伦萨 → 那不勒斯 → 索伦托',43.7765,11.2476,'14:00','高铁到那不勒斯后转 Circumvesuviana / 机场巴士或轮渡到索伦托；以最终车票衔接为准。','Firenze Santa Maria Novella','https://www.trenitalia.com/en.html'),
-    hotel('索伦托希尔顿酒店',40.6263,14.3750,'19:30','9/26–9/27，1 晚；到店后只在酒店/索伦托中心附近晚餐。','Hilton Sorrento Palace'),
-    food('I Fratellini',43.7709,11.2559,'—','备选：不用等正餐时快速解决。','Florence'),
-    food('Mercato Centrale',43.7771,11.2537,'—','备选：若 All’Antico 排队过长，直接回市场。','Florence') ] },
-  { id:9,label:'D9 卡普里',date:'9月27日 周日 · 索伦托 → 卡普里',title:'索伦托上岛与阿纳卡普里',color:'#34c759',locations:[
-    transport('索伦托 → 卡普里船票',40.6256,14.3754,'11:00','退房后从 Sorrento Marina Piccola 坐船上卡普里；船票尚未买，先确认班次和行李规则。','Sorrento Marina Piccola','https://www.snav.it/en/'),
-    hotel('贝拉维斯塔酒店',40.5514,14.2194,'12:00','Via Giuseppe Orlandi 10，阿纳卡普里，连住 2 晚。','Hotel Bellavista Anacapri'),
-    food('Da Gelsomina',40.5521,14.2029,'13:30','上岛午餐主推：阿纳卡普里一侧，先安顿再去。','Anacapri'),
-    spot('阿纳卡普里小镇',40.5517,14.2169,'16:00','第一天不硬塞蓝洞，留给海况更好的明天。','Anacapri'),
-    food('Il Solitario',40.5507,14.2178,'19:30','晚餐主推：靠近住处，减少夜间交通。','Anacapri'),
-    food('La Zagara',40.5514,14.2182,'—','备选：花园氛围；小红书评价两极，菜单和服务以近评为准。','Anacapri') ] },
-  { id:10,label:'D10 卡普里',date:'9月28日 周一 · 海况备选日',title:'蓝洞（看海况）→ 卡普里镇',color:'#00c7be',locations:[
-    spot('蓝洞',40.5597,14.2029,'09:00','需买票 · 仅海况允许才去；关洞就直接执行卡普里镇备选。','Blue Grotto Capri','https://www.capri.com/en/e/museums-and-attractions-in-capri',ticket('入洞 €19；船接驳另算','9 月开放约 09:00–18:00（最后入洞约 17:30）；当日海况决定是否开放，不能提前保证。€19 为洞口入洞票，去洞口的船票另算。')),
-    spot('奥古斯都花园',40.5487,14.2403,'14:30','卡普里镇散步与海景。','Gardens of Augustus Capri'),
-    food('La Capannina',40.5504,14.2421,'13:00','卡普里镇午餐主推，按当天上岛/下岛交通弹性调整。','Capri'),
-    food('L’Olivo',40.5510,14.2191,'19:30','特别晚餐主推：卡普里岛两星；需提前订位。','Anacapri','当地报道强调景观与服务；尝试点菜比盲选长套餐更稳。'),
-    food('Da Gelsomina',40.5521,14.2029,'—','备选：不想进正式餐厅时回阿纳卡普里。','Anacapri'),
-    food('La Zagara',40.5514,14.2182,'—','备选：主推满位或天气不佳时。','Anacapri') ] },
-  { id:11,label:'D11 罗马',date:'9月29日 周二 · 卡普里 → 罗马',title:'下岛、进罗马与酒店周边',color:'#ff9500',locations:[
-    transport('卡普里 → 那不勒斯船票',40.5517,14.2169,'09:00','船票尚未购买；先锁定到那不勒斯的班次再衔接火车。','Capri Ferry Terminal','https://www.snav.it/en/'),
-    transport('那不勒斯 → 罗马',40.8366,14.2544,'12:30','按船班预留缓冲；火车票尚未购买。','Naples Centrale','https://www.trenitalia.com/en.html'),
-    hotel('卡萨古特曼酒店',41.9027,12.4863,'16:30','Via dei Serviti 26，连住 3 晚。','Via dei Serviti 26 Rome'),
-    food('La Zanzara',41.9078,12.4567,'19:30','首晚主推：梵蒂冈/Prati 一带，抵达后不跨区。','Rome'),
-    food('Il Sorpasso',41.9083,12.4575,'—','备选：Prati 区，主推满位直接换。','Rome'),
-    food('Pizzarium Bonci',41.9032,12.4542,'—','备选：想快吃时去，避开正餐排队期待。','Rome') ] },
-  { id:12,label:'D12 罗马',date:'9月30日 周三 · 梵蒂冈与老城',title:'梵蒂冈 → 纳沃纳广场',color:'#af52de',locations:[
+  { id:7,label:'D7 佛罗伦萨',date:'9月25日 周五 · 抵达与老城',title:'主教堂 → 领主广场 → 日落',color:'#ff9500',locations:[
+    transport('佛罗伦萨夜巴下车点 → The Hoxton Florence',43.7816,11.2582,'06:00–08:30','夜巴最终下车点未定：到站后先导航酒店寄存行李，不承诺早到能办入住。','The Hoxton Florence',undefined,'pending','下单后立刻核对下车站：若是 Firenze Villa Costanza，优先 Tram T1 到 Alamanni–Stazione（约 22 分钟）后转出租/步行；若是 Firenze Autostazione / SMN 周边，直接出租约 10 分钟更省体力。\n酒店通常下午才能办理入住：抵达后只寄存行李、洗漱、补水；09:30 前仍未出发就删主教堂内部，保留广场外观。'),
+    hotel('佛罗伦萨霍克斯顿酒店',43.7816,11.2582,'08:00','夜间交通抵达后只寄存行李；约 20:45 回店办理入住。','The Hoxton Florence'),
+    spot('圣母百花大教堂',43.7731,11.2560,'10:30','只走外观、广场与教堂内部；不登穹顶，保留体力给日落。','Florence Cathedral'),
+    food('Mercato Centrale',43.7771,11.2537,'12:15','午餐主推：抵达日按体力灵活选摊，不强行订位。','Florence'),
+    spot('旧宫与领主广场',43.7697,11.2558,'14:00','旧宫外观、雕像与回廊；再顺路走到老桥。','Palazzo Vecchio Florence'),
+    spot('玫瑰园 → 米开朗琪罗广场',43.7589,11.2624,'18:00','日落前沿玫瑰园慢慢上坡；横构图收进穹顶、老桥与阿诺河。','Giardino delle Rose Florence'),
+    food('Trattoria dall’Oste',43.7757,11.2471,'20:30','晚餐候选：若想吃牛排，先订位；从山上下来太累则直接在酒店附近改吃。','Florence','牛排按重量计价，点餐量力而行。'),
+    food('Trattoria Zà Zà',43.7772,11.2540,'—','备选：中央市场旁，适合不想做正式晚餐时。','Florence') ] },
+  { id:8,label:'D8 索伦托',date:'9月26日 周六 · 佛罗伦萨 → 索伦托',title:'短 citywalk → 换城 → 酒店晚餐',color:'#5856d6',locations:[
+    spot('佛罗伦萨老城晨间 citywalk',43.7714,11.2558,'09:30','只在主教堂、旧桥附近轻走；不去比萨、不去乌菲兹，避免破坏 14:00 左右南下交通。','Florence Historic Centre'),
+    food('All’Antico Vinaio',43.7683,11.2560,'11:30','快速午餐主推；排队超过 20 分钟就直接换备选。','Florence'),
+    transport('Firenze SMN → Napoli Centrale → Sorrento',43.7765,11.2476,'13:30','12:40 结束午餐，13:00 从老城出发；13:15 前到 Firenze SMN。目标乘 13:30–14:30 的直达高铁。','Firenze Santa Maria Novella','https://www.trenitalia.com/en.html','pending','高铁：Firenze S. M. Novella → Napoli Centrale，直达通常约 2 小时 50 分–3 小时 10 分；浮动票价先按 €35–80/人预算（越早买通常越低），不是固定“¥400/人”。\n抵达 Napoli Centrale 后：跟站内“Circumvesuviana / Napoli Garibaldi”标识走，预留 15–25 分钟换乘。首选 EAV 直达 Sorrento，正常约 1 小时 10–20 分；连同换站与等车，保守按 1 小时 45 分。EAV 9/26–27 有施工/时刻调整风险，购票当天必须再看官方 App/公告。\n推荐安全目标：15:00 前离开佛罗伦萨 → 18:15–18:45 到 Napoli Centrale → 19:45–20:30 到 Sorrento。不要改成去 Naples 港口坐船：从车站去港口、候船反而更不稳。\nSorrento 站到 Hilton Sorrento Palace：带箱子优先出租约 5–10 分钟；不建议夜间拖箱上坡步行。'),
+    hotel('索伦托希尔顿酒店',40.6209,14.3721,'20:00','9/26–9/27，1 晚；正常 19:45–20:30 入住，到店后不再安排景点。','Hilton Sorrento Palace'),
+    food('Sorrento Il Ristorante',40.6209,14.3721,'20:00','晚到主推：就在酒店内，避免换城日再走远。','Sorrento'),
+    food('Il Leone Rosso',40.6253,14.3781,'—','备选：酒店餐厅满位、仍有体力进市中心时再去。','Sorrento'),
+    food('Mercato Centrale',43.7771,11.2537,'—','佛罗伦萨午餐备选：All’Antico 排队过长时直接换，不影响去车站。','Florence') ] },
+  { id:9,label:'D9 卡普里',date:'9月27日 周日 · 索伦托 → 阿纳卡普里',title:'上岛 → Chairlift → 阿纳卡普里',color:'#34c759',locations:[
+    transport('Hilton Sorrento Palace → Marina Piccola → Capri Marina Grande',40.6256,14.3754,'09:25','08:35 从酒店出发，08:55 前到 Marina Piccola；推荐 Caremar 09:25→09:57。','Sorrento Marina Piccola','https://easy.caremar.it/it/orari-tratta/Sorrento-Capri/','pending','Caremar 公布 Sorrento→Capri 09:25–09:57；票价以购买页为准。带行李请在 08:55 前到码头，预留取票/登船缓冲；不要卡点。\n到 Capri Marina Grande 后：大箱子优先出租直达 Anacapri（约 25–35 分钟，价格现场确认）；公交更便宜但要排队、山路和行李都不友好。正常 10:40–11:15 到 Hotel Bellavista 寄存行李。\n若早班停航：先问酒店能否改到晚到；不要买无法保证接续的末班船。'),
+    hotel('贝拉维斯塔酒店',40.5514,14.2194,'11:00','Via Giuseppe Orlandi 10，阿纳卡普里，连住 2 晚；10:40–11:15 先寄存行李。','Hotel Bellavista Anacapri'),
+    food('Il Solitario',40.5507,14.2178,'12:30','午餐主推：传统岛上菜、距酒店同区；周日营业，周一休。','Anacapri'),
+    spot('Monte Solaro Chairlift',40.5512,14.2170,'14:00','往返 €15；上山约 13 分钟，先看全岛再慢慢下山。','Monte Solaro Chairlift Anacapri','https://montesolarocapri.it/seggiovia/',ticket('往返 €15','全年开放，具体 9 月末班以当天公告为准；遇大风或设备调整就改阿纳卡普里小镇慢逛。')),
+    spot('阿纳卡普里小镇',40.5517,14.2169,'16:30','白墙、柠檬树与窄巷；第一天不排蓝洞。','Anacapri'),
+    food('Da Gelsomina',40.5521,14.2029,'19:30','晚餐主推：可向餐厅预约阿纳卡普里中心接送；适合 Chairlift 后的岛上第一晚。','Anacapri'),
+    food('La Zagara',40.5514,14.2182,'—','备选：主推满位时在酒店同区解决，菜单与服务以当天为准。','Anacapri') ] },
+  { id:10,label:'D10 卡普里',date:'9月28日 周一 · 蓝洞与卡普里镇',title:'蓝洞（看海况）→ 花园 → 卡普里镇',color:'#00c7be',locations:[
+    spot('蓝洞',40.5597,14.2029,'08:30','需买票 · 当日海况允许才去；早到减少排队，超过 60 分钟仍未上船就切换备选。','Blue Grotto Capri','https://www.coopculture.it/en/poi/blue-grotto/',ticket('入洞 €19 起；船接驳另算','9 月通常上午至傍晚开放，但风浪与潮位可随时关闭；洞内停留约 5 分钟，不把它写成必达项目。')),
+    transport('阿纳卡普里 → 卡普里镇',40.5517,14.2169,'12:00','蓝洞结束后才转场；公交约 25–35 分钟，出租约 15–20 分钟。','Capri Town',undefined,'pending','12:00 是目标不是硬性预约：蓝洞关闭则 10:30–11:00 提前去；若蓝洞排队超过 60 分钟，直接放弃，改公交/出租去 Capri 镇。返 Anacapri 晚餐前至少留 40 分钟交通缓冲。'),
+    food('Verginiello',40.5503,14.2415,'13:00','午餐主推：Piazzetta、公交站同区，花园前补给最顺。','Capri'),
+    spot('奥古斯都花园',40.5487,14.2403,'14:30','看 Faraglioni 海蚀柱与 Via Krupp 视角；风大就缩短停留。','Gardens of Augustus Capri'),
+    food('Da Gelsomina',40.5521,14.2029,'19:30','回阿纳卡普里后的晚餐主推；不把晚饭留在卡普里镇，以免夜间回酒店焦虑。','Anacapri'),
+    food('La Capannina',40.5504,14.2421,'—','卡普里镇午餐备选：氛围型、价格较高，建议先订位。','Capri'),
+    food('La Zagara',40.5514,14.2182,'—','阿纳卡普里晚餐备选。','Anacapri') ] },
+  { id:11,label:'D11 罗马',date:'9月29日 周二 · 卡普里 → 罗马',title:'下岛 → 罗马入住 → 日落外观',color:'#ff9500',locations:[
+    transport('Hotel Bellavista → Capri 港口 → Napoli',40.5517,14.2169,'09:40','08:20 从阿纳卡普里酒店出发，08:50 前到 Capri 港口；推荐 Caremar 09:40→11:05 到 Napoli。','Capri Ferry Terminal','https://easy.caremar.it/en/route-timetable/Napoli-Capri/','pending','从阿纳卡普里去 Marina Grande：带箱子优先出租，公交要额外预留排队时间。Caremar 9 月公布 Capri→Napoli 09:40–11:05（季节表，购票当日复核）。\n到港不是到火车站：11:05 下船后，先按 11:30 离开码头、12:00 前到 Napoli Centrale 为目标。到车站用出租最稳（约 15–25 分钟，视港口/拥堵）；不要预订 12:30 前出发的去罗马高铁。'),
+    transport('Napoli Centrale → Roma Termini',40.8366,14.2544,'13:15 后','抵达 Napoli Centrale 后只选 13:15 或更晚、直达 Roma Termini 的高铁；车程通常约 1 小时 10 分–1 小时 20 分。','Naples Centrale','https://www.trenitalia.com/en.html','pending','预算 €25–70/人浮动，取决于运营商、班次和购买时间；不写死“¥400”。9/29 先确认船班正常，再买/改这段最安全。\n建议 12:45 在 Napoli Centrale 已经进站候车，选 13:15–14:00 班次；约 14:30–15:20 到 Roma Termini。Termini→Casa Guttman：按导航选出租/地铁，保守 30–50 分钟，预计 15:30–16:30 到店。\n船晚点就删君士坦丁凯旋门，直接酒店 + Monti 晚餐；不要压缩港口到车站缓冲。'),
+    hotel('卡萨古特曼酒店',41.9027,12.4863,'16:00','Via dei Serviti 26，连住 3 晚；预计 15:30–16:30 到店后先放行李。','Via dei Serviti 26 Rome'),
+    spot('君士坦丁凯旋门',41.8897,12.4905,'18:00','只有顺利早到且还有体力才去看外观日落；晚点就直接删。','Arch of Constantine Rome'),
+    food('Ai Tre Scalini',41.8955,12.4936,'20:00','首晚主推：Monti 一带，抵达后不跨城跑餐厅。','Rome'),
+    food('La Taverna dei Fori Imperiali',41.8948,12.4887,'—','备选：首晚还有体力、可订到位时再去。','Rome') ] },
+  { id:12,label:'D12 罗马',date:'9月30日 周三 · 梵蒂冈与老城',title:'梵蒂冈 → 西班牙广场 → 万神庙 → 特莱维',color:'#af52de',locations:[
     spot('梵蒂冈博物馆 + 西斯廷礼拜堂',41.9065,12.4536,'08:30','需买票 · 务必通过官网选时段；只认官网票务入口。','Vatican Museums','https://tickets.museivaticani.va/home',ticket('官网时段票 €25','周一至周六 08:00–20:00，最后入场 18:00。计划预约：9/30 08:30。官网全票 €20 + 线上预约 €5；西斯廷礼拜堂包含在博物馆票内。')),
     food('Il Sorpasso',41.9083,12.4575,'13:30','午餐主推：就在梵蒂冈附近，减少暴走。','Rome'),
-    spot('纳沃纳广场',41.8992,12.4731,'16:30','下午从河边散步到老城。','Piazza Navona Rome'),
-    food('Armando al Pantheon',41.8993,12.4768,'19:30','晚餐主推：传统罗马菜，需提前订位。','Rome'),
+    spot('西班牙广场',41.9059,12.4823,'15:00','从梵蒂冈出来后第一站，停 20–30 分钟即可。','Spanish Steps Rome'),
+    spot('万神庙',41.8986,12.4769,'16:00','从西班牙广场步行而来；外立面与柱廊拍照即可。','Pantheon Rome'),
+    spot('纳沃纳广场',41.8992,12.4731,'17:00','从万神庙走来，看四河喷泉与傍晚广场。','Piazza Navona Rome'),
+    spot('特雷维喷泉',41.9009,12.4833,'18:15','把特莱维放在本日，不与斗兽场日重复。','Trevi Fountain Rome'),
+    food('Armando al Pantheon',41.8993,12.4768,'19:30','晚餐主推：传统罗马菜，需提前线上订位。','Rome'),
     food('Pizzarium Bonci',41.9032,12.4542,'—','备选午餐：如果 Il Sorpasso 无位。','Rome'),
     food('Roscioli',41.8941,12.4728,'—','备选晚餐：知名度高，订位困难则不强求。','Rome') ] },
-  { id:13,label:'D13 罗马',date:'10月1日 周四 · 古罗马与特雷维',title:'斗兽场 → Monti → 特雷维',color:'#ff3b30',locations:[
+  { id:13,label:'D13 罗马',date:'10月1日 周四 · 古罗马与 Monti',title:'斗兽场 → 古罗马广场 → Monti',color:'#ff3b30',locations:[
     spot('罗马斗兽场 + 古罗马广场 + 帕拉蒂尼山',41.8902,12.4922,'09:00','需买票 · 票务未买：实名证件与入场时间请以官方页面为准。','Colosseum Rome','https://ticketing.colosseo.it/en/',ticket('基础联票 成人 €18','10/1 开放 08:30–18:30，最后入场 17:30。计划预约：10/1 09:00。基础票含斗兽场一、二层 + 古罗马广场/帕拉蒂尼山，斗兽场停留 75 分钟；时段票提前 30 天开售。')),
     food('La Taverna dei Fori Imperiali',41.8948,12.4887,'13:00','午餐主推：斗兽场后步行可达，传统罗马菜。','Rome'),
-    spot('特雷维喷泉',41.9009,12.4833,'16:30','下午到傍晚散步；不必深夜特地二刷。','Trevi Fountain Rome'),
-    food('Trattoria Pennestri',41.8805,12.4988,'19:30','最后正式晚餐主推；提前订位，吃完打车/公交回酒店。','Rome'),
-    food('Ai Tre Scalini',41.8955,12.4936,'—','备选：Monti 区小酒馆，适合不想吃正餐。','Rome'),
-    food('Mimi e Coco',41.8990,12.4728,'—','备选：老城传统菜，热门时看排队再决定。','Rome') ] },
+    spot('Monti 街区',41.8951,12.4933,'15:30','古迹出来后只在 Monti 慢走、咖啡和买伴手礼；不再跨区追景点。','Monti Rome'),
+    food('Ai Tre Scalini',41.8955,12.4936,'19:30','晚餐主推：Monti 区小酒馆，适合古罗马日后不再走远。','Rome'),
+    food('Trattoria Pennestri',41.8805,12.4988,'—','备选：想吃更正式罗马菜且愿意打车时再去。','Rome'),
+    food('Mimi e Coco',41.8990,12.4728,'—','备选：不建议专程折返，只有刚好在老城才考虑。','Rome') ] },
   { id:14,label:'D14 返程',date:'10月2日 周五 · 罗马 → 杭州',title:'退房与返程',color:'#5856d6',locations:[
-    hotel('卡萨古特曼酒店',41.9027,12.4863,'09:00','退房并寄存行李；确认护照、退税资料和托运行李。','Via dei Serviti 26 Rome'),
-    food('Caffè Sant’Eustachio',41.8987,12.4754,'10:00','返程前咖啡/轻食主推，按机场出发时间可删减。','Rome'),
-    transport('罗马菲乌米奇诺 T3 → 北京首都 T3',41.8003,12.2389,'20:30','CA940 已订；10/3 12:45 抵达北京首都 T3。','Rome Fiumicino Airport Terminal 3',undefined,'booked'),
+    spot('圣彼得大教堂',41.9022,12.4539,'08:00','教堂免费但要安检；返程日不登穹顶，超过 09:45 未进场就改广场外观。','St. Peter’s Basilica Rome'),
+    spot('圣天使桥与城堡外观',41.9031,12.4663,'10:00','从圣彼得步行过来拍桥与城堡外观；不进馆。','Castel Sant’Angelo Rome'),
+    hotel('卡萨古特曼酒店',41.9027,12.4863,'11:30','回酒店取行李、整理退税资料；午餐只在酒店附近解决。13:30 前完成退房与行李确认。','Via dei Serviti 26 Rome'),
+    food('Caffè Sant’Eustachio',41.8987,12.4754,'—','备选：若行程提前结束且仍在老城，再去喝咖啡；不是返程日主线。','Rome'),
+    transport('酒店 → Roma Termini → FCO T3',41.9027,12.4863,'15:00','15:00 离酒店；优先 15:30 前到 Roma Termini，坐 Leonardo Express 直达 FCO。','Roma Termini','https://www.trenitalia.com/en/connections/leonardo-express.html','pending','推荐动作：14:45 叫出租/按 Google Maps 去 Roma Termini；15:30 前进站。Leonardo Express 每 15 分钟左右一班，Termini→Fiumicino Aeroporto 不停站 32 分钟，€14/人；到站后按 T3 指示步行。\n目标 16:20–16:45 到 FCO T3：先做 Global Blue 退税（预留 30–60 分钟）→ 17:30 起值机/托运 → 18:15 前安检/出境 → 19:45 到登机口附近。若退税排队过长，先完成海关盖章/所需手续，再按机场指引处理退款，绝不为退税错过航班。'),
+    transport('罗马菲乌米奇诺 T3 → 北京首都 T3',41.8003,12.2389,'20:30','CA940 已订；建议 19:45 前到登机口。10/3 12:45 抵达北京首都 T3。','Rome Fiumicino Airport Terminal 3',undefined,'booked','16:20–16:45 到航站楼是保守时间，不是要求 17:30 才到。退税、托运、安检任一项排队就会吃掉缓冲。落地北京后，按航司行李是否直挂杭州决定走“国际转机”还是“入境提行李再国内值机”；不要自行假设。'),
     food('Forno Campo de’ Fiori',41.8957,12.4722,'—','备选：若还有时间，在老城简单吃再取行李出发。','Rome') ] },
   { id:15,label:'D15 到家',date:'10月3日 周六 · 北京 → 杭州',title:'北京转机与回到杭州',color:'#5856d6',locations:[
-    transport('北京首都 T3 → 杭州萧山 T4',40.6413,116.5926,'14:30','CA1718 已订；16:45 抵达杭州萧山 T4。','Beijing Capital International Airport Terminal 3',undefined,'booked') ] }
+    transport('北京首都 T3 → 杭州萧山 T4',40.6413,116.5926,'14:30','CA1718 已订；10/3 16:45 抵达杭州萧山 T4。','Beijing Capital International Airport Terminal 3',undefined,'booked','12:45 到北京后的可用中转仅 1 小时 45 分。若行李直挂杭州：下机后立刻走“国内转机”指引，13:45 前完成安检并到登机口附近。若行李不直挂：需入境、提箱、重托运、再过安检，风险极高；现在必须在国航 App/客服核实。\n16:45 抵达杭州后，取行李 + 出到到达层按 25–45 分钟预留；正常 17:15–17:30 可离开机场。') ] }
 ];
 
 // 9/18 查询的逐日预报；出发当天仍应以手机天气 App 的实时雷达为准。
 const WEATHER = {
   1:{icon:'🌤️',temp:'25–14°C',summary:'晴间多云，抵达后降温快',note:'穿搭：短袖 + 薄外套。落地日晚餐只选酒店周边；遇航班延误直接走备选快餐。'},
   2:{icon:'☀️',temp:'24–12°C',summary:'晴间多云，白天舒适',note:'卢浮宫室内为主，带薄外套即可；雨具不是刚需，但包里放折叠伞更稳。'},
-  3:{icon:'🌤️',temp:'24–13°C',summary:'午后转晴，日落时偏凉',note:'铁塔和蒙马特照走。日落时加一层薄外套；若云层遮挡日落，直接提早下山晚餐。'},
-  4:{icon:'☀️',temp:'29–21°C',summary:'炎热偏闷',note:'防晒、水和凉鞋放随身包。抵达日不去海边暴晒，马塞纳广场轻走即可。'},
+  3:{icon:'🌤️',temp:'24–13°C',summary:'午后转晴，日落时偏凉',note:'老城、歌剧院和蒙马特照走。日落时加一层薄外套；若云层遮挡日落，直接提早下山晚餐。'},
+  4:{icon:'☀️',temp:'29–21°C',summary:'炎热偏闷',note:'铁塔和香街白天防晒；下午只取行李去 Gare de Lyon。尼斯抵达晚，不安排景点。'},
   5:{icon:'🌤️',temp:'28–18°C',summary:'多云间晴，适合海边',note:'海边日照仍强：防晒、墨镜、泳衣/凉鞋。若午后起雷或风大，删海滩停留，改老城咖啡。'},
-  6:{icon:'🌤️',temp:'27–18°C',summary:'局部日照，雷暴风险需复查',note:'出发前看实时雷达；若下雨或雷暴，取消滨海自由城，提前取行李并去车站附近吃饭。'},
+  6:{icon:'🌤️',temp:'27–18°C',summary:'局部日照，雷暴风险需复查',note:'出发前看实时雷达；若下雨或雷暴，缩短海边步道，提前取行李并去车站附近吃饭。'},
   7:{icon:'🌤️',temp:'25–14°C',summary:'晴间多云，早晚凉',note:'短袖 + 薄外套。老城步行多，穿舒适鞋；抵达后先寄存行李再开始。'},
-  8:{icon:'🌤️',temp:'26–14°C',summary:'晴间多云；晚间雷雨风险',note:'乌菲兹照常，米开朗琪罗广场仅晴天去；有雷雨就改老城咖啡并提前去车站。'},
+  8:{icon:'🌤️',temp:'26–14°C',summary:'晴间多云；晚间雷雨风险',note:'这是换城日，不再进乌菲兹或去比萨；午饭后直奔车站，雨天不影响主线。'},
   9:{icon:'🌤️',temp:'24–20°C',summary:'多云间晴，海上交通优先',note:'船班比景点优先。带轻薄防风外套；若风浪影响船班，立刻以船公司通知为准，不强行上岛。'},
   10:{icon:'🌦️',temp:'26–20°C',summary:'局部晨雨、多云',note:'蓝洞先看海况和风浪；关洞或下雨就直接执行卡普里镇 + 奥古斯都花园，别在码头硬等。'},
   11:{icon:'🌦️',temp:'26–19°C',summary:'多云，午后可能有短时雨',note:'下岛与火车衔接优先，行程只保留酒店周边晚餐；雨天不额外加老城散步。'},
   12:{icon:'🌤️',temp:'28–16°C',summary:'晴间多云，白天偏暖',note:'梵蒂冈室内 + 老城步行，带水与遮阳。若午后阵雨，纳沃纳广场改为就近咖啡馆等待。'},
   13:{icon:'🌤️',temp:'26–14°C',summary:'晴到多云，早晚明显凉',note:'斗兽场暴晒段带水/帽子；天气转差就缩短帕拉蒂尼山，把时间留给 Monti。'},
-  14:{icon:'🌤️',temp:'26–14°C',summary:'晴间多云，适合返程',note:'上午只留轻食与最后整理；折叠伞、外套和充电宝放随身包，别压缩去机场缓冲。'}
+  14:{icon:'🌤️',temp:'26–14°C',summary:'晴间多云，适合返程',note:'圣彼得与圣天使桥只留上午；11:30 回酒店取行李，15:00 准时出发机场。'}
 };
 
 const FALLBACK = {
   1:'航班晚点 / 太累：只进酒店、在车站或酒店周边吃；不要补景点。',
   2:'奥赛或卢浮宫售罄：保留能进的一馆；另一段改杜乐丽花园 → 塞纳河 → 玛黑，晚餐不变。',
-  3:'铁塔顶层关闭或蒙马特云太厚：保留二层 / 提早下山，别为等日落压缩晚餐。',
-  4:'抵达延误：删马塞纳广场，只留酒店周边晚餐与补给。',
-  5:'下雨 / 走不动：删城堡山和海滩，老城喝咖啡后直接去晚餐。',
-  6:'雷雨或交通不稳：删滨海自由城，15:30 后只做取行李、吃饭、到站。',
+  3:'Granite 无位或蒙马特云太厚：米其林换备选 / 提早下山，别为等日落压缩晚餐。',
+  4:'铁塔售罄或巴黎→尼斯班次变化：删登塔，保留外观与香街；以能衔接晚间交通为第一优先。',
+  5:'下雨 / 走不动：在摩纳哥老城停留后直接回尼斯，不强行去芒通。',
+  6:'雷雨或交通不稳：缩短英国人漫步道，16:00 后只做取行李、吃饭、到站。',
   7:'夜车晚到：主教堂只看外观，午餐改中央市场，不追任何预约项目。',
-  8:'乌菲兹延误 / 下雨：删米开朗琪罗广场，16:30 后直接取行李去车站。',
+  8:'高铁或索伦托衔接变更：删晨间 citywalk，直接去 Firenze SMN；到索伦托后只进酒店吃饭。',
   9:'船停航或晚点：先联系酒店，改那不勒斯留宿；不要购买无法衔接的末班船。',
   10:'蓝洞关闭：直接去卡普里镇 + 奥古斯都花园；不在码头等超过 30 分钟。',
-  11:'船班拖延：删罗马任何散步，只保留入住和 Prati 区晚餐。',
+  11:'船班拖延：删君士坦丁凯旋门，只保留入住和 Monti 区晚餐。',
   12:'梵蒂冈售罄 / 迟到：改圣彼得广场外观 + Castel Sant’Angelo 河边；下午老城照走。',
   13:'斗兽场售罄 / 太晒：改 Monti → 特雷维；不要临时买来源不明的高价票。',
-  14:'出发前只保留咖啡、取行李、去机场；任何购物都可删。'
+  14:'圣彼得排队过长：只拍广场与圣天使桥外观，立刻回酒店取行李去机场。'
 };
 
 // ╔══════════════════════════════════════════════════════════════╗
@@ -482,7 +504,7 @@ function overviewContent() {
 <div class="trip-summary">
   <section class="overview-panel"><div class="overview-kicker">酒店 · 已订</div>
     <div class="stay-row"><span class="stay-city">巴黎</span><div><span class="stay-name">巴黎里昂车站诺富特</span><span class="stay-meta">9/19–9/22 · 3 晚 · 预计 21:00 到店</span></div><span class="stay-state">已订</span></div>
-    <div class="stay-row"><span class="stay-city">尼斯</span><div><span class="stay-name">尼斯市中心希尔顿逸林标志</span><span class="stay-meta">9/22–9/24 · 2 晚 · 预计 15:30 到店</span></div><span class="stay-state">已订</span></div>
+    <div class="stay-row"><span class="stay-city">尼斯</span><div><span class="stay-name">尼斯市中心希尔顿逸林标志</span><span class="stay-meta">9/22–9/24 · 2 晚 · 巴黎交通待购买，晚到只入住</span></div><span class="stay-state">已订</span></div>
     <div class="stay-row"><span class="stay-city">佛罗伦萨</span><div><span class="stay-name">佛罗伦萨霍克斯顿</span><span class="stay-meta">9/25–9/26 · 1 晚 · 夜间抵达后先寄存行李</span></div><span class="stay-state">已订</span></div>
     <div class="stay-row"><span class="stay-city">索伦托</span><div><span class="stay-name">索伦托希尔顿酒店</span><span class="stay-meta">9/26–9/27 · 1 晚 · 那不勒斯转乘后入住</span></div><span class="stay-state">已订</span></div>
     <div class="stay-row"><span class="stay-city">卡普里</span><div><span class="stay-name">贝拉维斯塔 · 阿纳卡普里</span><span class="stay-meta">9/27–9/29 · 2 晚 · 预计 12:00 到店</span></div><span class="stay-state">已订</span></div>
@@ -494,13 +516,14 @@ function overviewContent() {
   </aside>
 </div>
 <div class="action-grid">
-  <div class="action-card"><div class="action-title">待购买交通</div><div class="action-value">9/24 尼斯→佛罗伦萨<br>9/26 佛罗伦萨→那不勒斯<br>卡普里往返船票</div></div>
-  <div class="action-card"><div class="action-title">待预约</div><div class="action-value">卢浮宫、铁塔、乌菲兹<br>梵蒂冈、斗兽场、米其林</div></div>
+  <div class="action-card"><div class="action-title">待购买交通</div><div class="action-value">9/22 巴黎→尼斯<br>9/24 尼斯→佛罗伦萨<br>9/26 佛罗伦萨→索伦托<br>9/27、9/29 两段船票</div></div>
+  <div class="action-card"><div class="action-title">待预约</div><div class="action-value">奥赛、卢浮宫、铁塔<br>梵蒂冈、斗兽场、Granite</div></div>
 </div>
 <div class="section-head">先完成这些</div>
-<div class="card"><div class="name">🚆 交通购买决策</div><div class="desc"><b>9/24 尼斯 → 佛罗伦萨：</b>今日先查 Trenitalia / SNCF；只接受 ≤2 次换乘、每次至少留 35 分钟。<br><br><b>9/26 佛罗伦萨 → 那不勒斯 → 索伦托：</b>优先佛罗伦萨直达那不勒斯高铁，抵达后再接索伦托；你已有索伦托 1 晚酒店，不需要夜宿那不勒斯。<br><br><b>卡普里船：</b>先锁 9/27 索伦托→卡普里，再买 9/29 卡普里→那不勒斯；以最终火车和船班倒推。</div><div class="links"><a class="btn rsv" target="_blank" href="https://www.trenitalia.com/en.html">打开 Trenitalia</a><a class="btn rsv" target="_blank" href="https://www.snav.it/en/">打开 SNAV 船票</a></div></div>
+<div class="card"><div class="name">🚆 交通购买决策</div><div class="desc"><b>购买顺序：</b>① 9/22 巴黎→尼斯 TGV；② 9/26 佛罗伦萨→那不勒斯高铁；③ 9/27 索伦托→卡普里上午船；④ 9/29 卡普里→那不勒斯上午船；⑤ 用已确定的佛罗伦萨到达/离开时间再买 9/24 夜巴。<br><br><b>价格口径：</b>页面只展示官方已公布票价或合理浮动区间；未买票的高铁、夜巴绝不伪造成固定“¥400/人”。<br><br><b>硬规则：</b>火车换乘至少 35 分钟；港口转火车至少 90 分钟；夜巴不接受半夜站外换站或超过 2 次换乘。</div><div class="links"><a class="btn rsv" target="_blank" href="https://www.sncf-connect.com/en-en/">巴黎→尼斯 SNCF</a><a class="btn rsv" target="_blank" href="https://www.trenitalia.com/en.html">意铁高铁</a><a class="btn rsv" target="_blank" href="https://easy.caremar.it/en/">Caremar 船票</a></div></div>
+<div class="card" style="margin-top:10px"><div class="name">⏱️ 全程移动时间线：按“到门口”而不是“车开走”算</div><div class="desc"><b>9/19 杭州→巴黎：</b>07:00 到萧山 T4；北京只留 2:05 中转，必须核实行李直挂；CDG 18:15 落地，正常 20:15–20:45 出到达层，保守 21:15；正常 21:30–22:30 到巴黎酒店。<br><br><b>9/22 巴黎→尼斯：</b>15:15 回巴黎酒店取行李，15:35 到 Gare de Lyon，16:30 左右上车；正常 22:00–23:15 到 Nice-Ville，步行 4–6 分钟到酒店。<br><br><b>9/24 尼斯→佛罗伦萨：</b>16:00 回酒店取行李，17:00 前吃饭，20:30 后夜巴；最终上下车点和车次以购票后为准。<br><br><b>9/26 佛罗伦萨→索伦托：</b>13:15 到 Firenze SMN，目标 13:30–14:30 高铁；约 18:15–18:45 到 Napoli Centrale；约 19:45–20:30 到 Sorrento，再出租 5–10 分钟到 Hilton。<br><br><b>9/27 索伦托→卡普里：</b>08:35 离酒店、08:55 到码头、09:25→09:57 船；10:40–11:15 到 Anacapri 酒店寄存行李。<br><br><b>9/29 卡普里→罗马：</b>08:20 离酒店、09:40→11:05 船到 Napoli；12:00 前到 Napoli Centrale；只买 13:15 后去 Roma Termini 的高铁；15:30–16:30 到酒店。<br><br><b>10/2 罗马→机场：</b>15:00 离酒店、15:30 前到 Termini，Leonardo Express 32 分钟/€14；16:20–16:45 到 FCO T3，先退税再值机，19:45 前到登机口。</div></div>
 <div class="card" style="margin-top:10px"><div class="name">🧳 卡普里最后一公里（带行李）</div><div class="desc">船到 Marina Grande 后：<b>带行李优先出租车直达 Hotel Bellavista（Anacapri）</b>；轻装才考虑缆车上 Capri 镇再转 Anacapri 公交。不要把大箱子塞进拥挤公交；风浪、排队或晚到时直接打车并通知酒店。上岛日不要再排蓝洞。</div></div>
-<div class="card" style="margin-top:10px"><div class="name">🎟️ 购票执行卡</div><div class="desc"><b>现在按此顺序买：</b>卢浮宫 → 铁塔 → 梵蒂冈 → 斗兽场 → 乌菲兹 → Granite。每张门票卡均有“官方购票 + 携程打开后搜票”：官方用于核验规则与时段；携程打开后搜索“景点名 + 门票”，用于中文套餐和库存对比。每张票：姓名与护照一致、截图/邮件离线保存；先看改期退款规则。迟到或售罄时不买黄牛，直接按当天“失控方案”切换。</div></div>
+<div class="card" style="margin-top:10px"><div class="name">🎟️ 购票执行卡</div><div class="desc"><b>现在按此顺序买：</b>奥赛 → 卢浮宫 → 铁塔 → 梵蒂冈 → 斗兽场 → Granite。乌菲兹已从主线删除，不必买票。每张门票卡均有“官方购票 + 携程打开后搜票”：官方用于核验规则与时段；携程打开后搜索“景点名 + 门票”，用于中文套餐和库存对比。每张票：姓名与护照一致、截图/邮件离线保存；先看改期退款规则。迟到或售罄时不买黄牛，直接按当天“失控方案”切换。</div></div>
 <div class="section-head">行程概览</div>
 <div class="day-list">${DAYS.slice(1).map(d=>`<div class="card" onclick="go(${d.id})"><div class="name"><span class="dot" style="background:${d.color}"></span>${d.label} · ${d.title}</div><div class="desc">${d.date}</div></div>`).join('')}</div>
 <div class="section-head">使用提醒</div>
